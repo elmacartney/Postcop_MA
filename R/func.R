@@ -48,7 +48,7 @@ group4 <- function(m1, m2, m3, m4, # m1 - smallest & m4 biggest
 
 # estimate
 
-est_se <- function(est, se, n1, n2){ # m2 = higher/larger group
+est_se <- function(est, se, n1, n2){ # n2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
   p <- n1/n12 # prop for n1
@@ -66,7 +66,7 @@ est_se <- function(est, se, n1, n2){ # m2 = higher/larger group
 
 # t values
 
-t_vals <- function(t, n1, n2){ # m2 = higher/larger group
+t_vals <- function(t, n1, n2){ # b2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
   p <- n1/n12 # prop for n1
@@ -102,7 +102,8 @@ F_vals <- function(F_val, n1, n2, reverse = FALSE){ # m2 = higher/larger group
 
 # p value (sign required)
 
-p_vals <- function(p_val, n1, n2, reverse = FALSE){ # m2 = higher/larger group
+#Don't actually need this function as we got test stats 
+p_vals <- function(p_val, n1, n2, reverse = FALSE){ # n2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
   p <- n1/n12 # prop for n1

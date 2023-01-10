@@ -1,0 +1,31 @@
+---
+title: "Post-cop trait on paternity"
+author: "Erin Macartney"
+date: '2023-01-10'
+output: html_document
+---
+# Settin up {.tabset}
+
+## Loading packages
+```{r}
+pacman::p_load(tidyverse, here, metafor, clubSandwich, orchaRd)
+```
+
+## Loading data and functions
+```{r}
+dat <- read_csv(here("Data", "Data_raw.csv"))
+# Load custom function to extract data
+source(here("R/func.R"))
+```
+
+## Calculating r
+```{r}
+effect_size_group2 <- with(dat, mapply(group2, mean_low, mean_high, SD_low, SD_high, n_low, n_high))
+
+#TODO group4
+
+#TODO need to adjust function to take N rather than n1 and n2
+effect_size_est <- with(dat, mapply(est_se, SE, ))
+
+
+```
