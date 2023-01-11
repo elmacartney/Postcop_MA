@@ -21,7 +21,7 @@ group2 <- function(m1, m2, sd1, sd2, n1, n2){ # m2 = higher/larger group
 #group2(3,5, 2,2, 30, 60)
 
 # 4 groups
-
+#TODO rep() doesn't work with Nas
 group4 <- function(m1, m2, m3, m4, # m1 - smallest & m4 biggest
                    sd1, sd2, sd3, sd4, 
                    n1, n2, n3, n4,
@@ -44,7 +44,7 @@ group4 <- function(m1, m2, m3, m4, # m1 - smallest & m4 biggest
 }
 
 # this takes a while
-#group4(3, 6, 10, 12, 2, 2, 2, 2, 30, 30, 30, 30)
+# group4(3, 6, 10, 12, 2, 2, 2, 2, 30, 30, 30, 30)
 
 # estimate
 

@@ -12,7 +12,7 @@ pacman::p_load(tidyverse, here, metafor, clubSandwich, orchaRd)
 ```
 
 ## Loading data and functions
-```{r}
+```{r, message = FALSE}
 dat <- read_csv(here("Data", "Data_raw.csv"))
 # Load custom function to extract data
 source(here("R/func.R"))
@@ -20,12 +20,27 @@ source(here("R/func.R"))
 
 ## Calculating r
 ```{r}
-effect_size_group2 <- with(dat, mapply(group2, mean_low, mean_high, SD_low, SD_high, n_low, n_high))
+effect_size_group2 <- with(dat, mapply(group2, 
+                                       mean_low, mean_high, 
+                                       SD_low, SD_high, 
+                                       n_low, n_high))
 
-#TODO group4
+
+#TODO this isn't working because there are NAs
+effect_size_group4 <- with(dat, mapply(group4, 
+                                       mean_low, mean_med1, mean_med2, mean_high,
+                                       SD_low, SD_med1, SD_med2, SD_high,
+                                       n_low, n_med1, n_med2, n_high,
+                                       sim = 100000))
 
 #TODO need to adjust function to take N rather than n1 and n2
 effect_size_est <- with(dat, mapply(est_se, SE, ))
 
 
+#TODO need to join all calculated r into one column
 ```
+
+# Analysis {.tabset}
+
+## Global effect size
+
