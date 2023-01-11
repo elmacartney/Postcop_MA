@@ -26,6 +26,7 @@ effect_size_group2 <- with(dat, mapply(group2,
                                        n_low, n_high))
 
 
+
 #TODO this isn't working because there are NAs
 effect_size_group4 <- with(dat, mapply(group4, 
                                        mean_low, mean_med1, mean_med2, mean_high,
@@ -34,11 +35,23 @@ effect_size_group4 <- with(dat, mapply(group4,
                                        sim = 100000))
 
 #TODO need to adjust function to take N rather than n1 and n2
-effect_size_est <- with(dat, mapply(est_se, SE, ))
+effect_size_est <- with(dat, mapply(est_se_b, estimate,SE, N))
 
-#TODO need to incorporate sign into F and p value calculations
+effect_size_t <- with(dat, mapply(t_vals_b, t, N))
+
+effect_size_F <- with(dat, mapply(F_vals_b, F, N))
+#TODO all F stats are positive but one is unclear so need to remove
 
 #TODO need to join all calculated r into one column
+dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, "effect_size_est" =  effect_size_est, "effect_size_t" =  effect_size_t, "effect_size_F" = effect_size_F)
+
+#removing unclear F stat direction
+df2 <- subset(dat2, Effectsize_ID !='3')
+
+#flipping effect size so that higher = better
+
+
+
 ```
 
 # Analysis {.tabset}

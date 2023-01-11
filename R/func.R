@@ -95,6 +95,8 @@ est_se_b<- function(est, se, N){ # n2 = higher/larger group
   r_b #r_b = r
 }
 
+# est_se_b(3,1,20)
+
 # t values
 
 t_vals <- function(t, n1, n2){ # n2 = higher/larger group
@@ -185,6 +187,5 @@ p_vals <- function(p_val, n1, n2, reverse = FALSE){ # n2 = higher/larger group
 
 # test
 #p_vals(0.004, 20, 20, reverse = TRUE)
-
 
 
