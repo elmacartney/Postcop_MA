@@ -36,6 +36,7 @@ effect_size_group4 <- with(dat, mapply(group4,
 #TODO need to adjust function to take N rather than n1 and n2
 effect_size_est <- with(dat, mapply(est_se, SE, ))
 
+#TODO need to incorporate sign into F and p value calculations
 
 #TODO need to join all calculated r into one column
 ```

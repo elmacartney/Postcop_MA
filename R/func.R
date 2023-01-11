@@ -17,6 +17,23 @@ group2 <- function(m1, m2, sd1, sd2, n1, n2){ # m2 = higher/larger group
   r_b #r_b = r
 }
 
+#adjusting for continuous n and assumed balanced design
+
+group2_b<- function(m1, m2, sd1, sd2, N){ # m2 = higher/larger group
+  n12 <- N
+  n1 <- N/2
+  n2 <- N/2
+  h <- n12/n1 + n12/n2
+  p <- n1/n12 # prop for n1
+  q <- n2/n12 # prop for n2
+  s_pool <- sqrt( ((n1-1)*sd1^2 + (n2-1)*sd2^2) / (n12 - 2) )
+  j <- 1 - (3 / (4*n12 - 9))
+  d <- ((m2 - m1) / s_pool) * j
+  r_pb <-  d / sqrt(d^2 + h)
+  r_b <- r_pb*(sqrt(p*q)/dnorm(qnorm(p)))
+  r_b #r_b = r
+}
+
 # test
 #group2(3,5, 2,2, 30, 60)
 
@@ -63,10 +80,24 @@ est_se <- function(est, se, n1, n2){ # n2 = higher/larger group
 # test
 #est_se(3,1, 20 ,20)
 
+#adjusting for continuous n and assumed balanced design
+est_se_b<- function(est, se, N){ # n2 = higher/larger group
+  n12 <- N
+  n1 <- N/2
+  n2 <- N/2
+  #h <- n12/n1 + n12/n2
+  p <- n1/n12 # prop for n1
+  q <- n2/n12 # prop for n2
+  t <- est/se
+  r_pb <- t/sqrt(t^2+ n12 -2)
+  
+  r_b <- r_pb*(sqrt(p*q)/dnorm(qnorm(p)))
+  r_b #r_b = r
+}
 
 # t values
 
-t_vals <- function(t, n1, n2){ # b2 = higher/larger group
+t_vals <- function(t, n1, n2){ # n2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
   p <- n1/n12 # prop for n1
@@ -80,6 +111,22 @@ t_vals <- function(t, n1, n2){ # b2 = higher/larger group
 
 # test
 #t_vals(3, 30, 30)
+
+#adjusting for continuous n and assumed balanced design
+
+t_vals_b <- function(t, N){
+  n12 <- N
+  n1 <- N/2
+  n2 <- N/2
+  #h <- n12/n1 + n12/n2
+  p <- n1/n12 # prop for n1
+  q <- n2/n12 # prop for n2
+  #t <- est/se
+  r_pb <- t/sqrt(t^2+ n12 -2)
+  
+  r_b <- r_pb*(sqrt(p*q)/dnorm(qnorm(p)))
+  r_b #r_b = r
+}
 
 # F values (sign required)
 
@@ -99,6 +146,24 @@ F_vals <- function(F_val, n1, n2, reverse = FALSE){ # m2 = higher/larger group
 
 # test
 #F_vals(9, 20, 20, reverse = TRUE)
+
+#adjusting for continuous n and assumed balanced design
+
+F_vals_b <- function(F_val, N, reverse = FALSE){
+  n12 <- N
+  n1 <- N/2
+  n2 <- N/2
+  #h <- n12/n1 + n12/n2
+  p <- n1/n12 # prop for n1
+  q <- n2/n12 # prop for n2
+  #t <- est/se
+  r_pb <- sqrt(F_val)/sqrt(F_val + n12 -2)
+  
+  r_b <- r_pb*(sqrt(p*q)/dnorm(qnorm(p)))
+  if(reverse == TRUE){
+    r_b = r_b*(-1)}
+  r_b
+}
 
 # p value (sign required)
 
@@ -120,4 +185,6 @@ p_vals <- function(p_val, n1, n2, reverse = FALSE){ # n2 = higher/larger group
 
 # test
 #p_vals(0.004, 20, 20, reverse = TRUE)
+
+
 
