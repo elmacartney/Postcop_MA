@@ -8,7 +8,7 @@ output: html_document
 
 ## Loading packages
 ```{r}
-pacman::p_load(tidyverse, here, metafor, clubSandwich, orchaRd)
+pacman::p_load(tidyverse, here, metafor, clubSandwich, orchaRd, tidyr)
 ```
 
 ## Loading data and functions
@@ -26,31 +26,49 @@ effect_size_group2 <- with(dat, mapply(group2,
                                        n_low, n_high))
 
 
+#only selecting study that reported mean of for groups
 
-#TODO this isn't working because there are NAs
-effect_size_group4 <- with(dat, mapply(group4, 
-                                       mean_low, mean_med1, mean_med2, mean_high,
-                                       SD_low, SD_med1, SD_med2, SD_high,
-                                       n_low, n_med1, n_med2, n_high,
-                                       sim = 100000))
+# dat_a <- dat %>%
+#   filter(First_author == "Yamane")
 
-#TODO need to adjust function to take N rather than n1 and n2
+# effect_size_group4 <- with(dat_a, mapply(group4, 
+#                                        mean_low, mean_med1, mean_med2, mean_high,
+#                                        SD_low, SD_med1, SD_med2, SD_high,
+#                                        n_low, n_med1, n_med2, n_high,
+#                                        sim = 100000))
+
+#manually added these correlations based on the function above
+
+
 effect_size_est <- with(dat, mapply(est_se_b, estimate,SE, N))
 
 effect_size_t <- with(dat, mapply(t_vals_b, t, N))
 
-effect_size_F <- with(dat, mapply(F_vals_b, F, N))
-#TODO all F stats are positive but one is unclear so need to remove
+effect_size_F <- with(dat, mapply(F_vals_b, F, N, reverse = FALSE))
+
+effect_size_p <- with(dat, mapply(p_vals_b, p, N, reverse = FALSE))
+
+
 
 #TODO need to join all calculated r into one column
-dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, "effect_size_est" =  effect_size_est, "effect_size_t" =  effect_size_t, "effect_size_F" = effect_size_F)
+dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, "effect_size_est" =  effect_size_est, "effect_size_t" =  effect_size_t, "effect_size_F" = effect_size_F, "effect_size_p" = effect_size_p)
 
 #removing unclear F stat direction
 df2 <- subset(dat2, Effectsize_ID !='3')
 
+#combining all r into one column
+
+df3 <- df2 %>%
+    select("Effectsize_ID","Corr_r", "effect_size_group2", "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p")%>% pivot_longer(cols = -Effectsize_ID, values_to = "effect_size", names_to = "summary_statistic") %>% drop_na() 
+
+#merging back with df2
+
+df4 <- merge(df3, df2, by = "Effectsize_ID")
+
+# df2 %>% pivot_longer(cols = c("Corr_r", "effect_size_group2", "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p"), values_to = "effect_size", names_to = "summary_statistic") %>% drop_na(effect_size)
+
 #flipping effect size so that higher = better
-
-
+df4$effect_size2<- ifelse(df4$Coin == 2, -df4$effect_size, df4$effect_size) 
 
 ```
 
