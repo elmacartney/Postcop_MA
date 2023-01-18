@@ -86,11 +86,11 @@ df4$effect_size2<- ifelse(df4$Coin == 2, -df4$effect_size, df4$effect_size)
 
 ```{r, eval = FALSE}
 
-length(unique(df4$Species)) #31 species
+length(unique(df4$Species)) #34 species
 unique(df4$Species)
 
 taxa <- tnrs_match_names(unique(df4$Species))
-table(taxa$approximate_match) #31
+table(taxa$approximate_match) #34
 
 # mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
 #HTTP failure: 400 [/v3/tree_of_life/induced_subtree] Error: node_id 'ott3411771' was not found!list(ott3411771 = "pruned_ott_id")
@@ -103,7 +103,7 @@ taxa <- tnrs_match_names(unique(df4$Species))
 
 mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name") # comes up with warning about dropping singleton nodes
 
-sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) #"Drosophila_melanogaster" "Gadus_morhua"            "Gryllus_bimaculata"      "Sus_domestica"  names not matching
+sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) #"Drosophila_melanogaster" "Gadus_morhua"            "Gryllus_bimaculata"      "Sus_domestica" "Coregonus_lavaretus"  "Cyprinus_carpio"  names not matching
 #allocating drosophila melanogaster to wrong ottID
 #changing names of other species
 
@@ -111,9 +111,15 @@ sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) #"Drosophila_
 
 #allocating correct OTTID
 inspect(taxa, taxon_name = "Drosophila_melanogaster")
-taxa <- updf4e(taxa, taxon_name = "Drosophila_melanogaster", new_row_number = 1)
-mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+taxa <- update(taxa, taxon_name = "Drosophila_melanogaster", new_row_number = 1)
 
+inspect(taxa, taxon_name = "Cyprinus_carpio")
+taxa <- update(taxa, taxon_name = "Cyprinus_carpio", new_row_number = 1)
+
+inspect(taxa, taxon_name = "Coregonus_lavaretus")
+taxa <- update(taxa, taxon_name = "Coregonus_lavaretus", new_row_number = 1)
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
 
 df4$Species[df4$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
 # mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
@@ -126,18 +132,17 @@ sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) # all names m
 
 plot(mytree, show.tip.label = T, cex = 0.8, no.margin = TRUE)
 str(mytree)
-is.binary.tree(mytree)
 
 write.tree(mytree, file = "species_tree.tre")
 ```
 ## Calculating Zr and Variance
 
 ```{r, eval = FALSE}
-zr <- escalc(measure = "ZCOR", ni = dat$N, ri = dat$effect_size2)
+zr <- escalc(measure = "ZCOR", ni = df4$N, ri = df4$effect_size2)
 
 #adding back to dataframe 
 
-df5 <- bind_cols(dat, zr)
+df5 <- bind_cols(df4, zr)
 
 write.csv(df5, "processed_data.csv")
 
