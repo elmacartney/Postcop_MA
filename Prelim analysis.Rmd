@@ -4,22 +4,33 @@ author: "Erin Macartney"
 date: '2023-01-10'
 output: html_document
 ---
-# Settin up {.tabset}
+# Setting up {.tabset}
 
 ## Loading packages
 ```{r}
-pacman::p_load(tidyverse, here, metafor, clubSandwich, orchaRd, tidyr)
+pacman::p_load(tidyverse, 
+               here, 
+               metafor, 
+               clubSandwich, 
+               orchaRd,
+               rotl,
+               ape,
+               phytools,
+               MCMCglmm)
 ```
 
 ## Loading data and functions
 ```{r, message = FALSE}
-dat <- read_csv(here("Data", "Data_raw.csv"))
+# dat <- read_csv(here("Data", "Data_raw.csv"))
 # Load custom function to extract data
-source(here("R/func.R"))
+
+dat <- read_csv(here("Data", "processed_data.csv"))
+source(here("R/func.R")) #functions for converting other statistics into correlations
+tree <- read.tree(file = "species_tree.tre") #loading phylogenetic tree
 ```
 
 ## Calculating r
-```{r}
+```{r, eval = FALSE}
 effect_size_group2 <- with(dat, mapply(group2, 
                                        mean_low, mean_high, 
                                        SD_low, SD_high, 
@@ -49,8 +60,6 @@ effect_size_F <- with(dat, mapply(F_vals_b, F, N, reverse = FALSE))
 effect_size_p <- with(dat, mapply(p_vals_b, p, N, reverse = FALSE))
 
 
-
-#TODO need to join all calculated r into one column
 dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, "effect_size_est" =  effect_size_est, "effect_size_t" =  effect_size_t, "effect_size_F" = effect_size_F, "effect_size_p" = effect_size_p)
 
 #removing unclear F stat direction
@@ -70,9 +79,111 @@ df4 <- merge(df3, df2, by = "Effectsize_ID")
 #flipping effect size so that higher = better
 df4$effect_size2<- ifelse(df4$Coin == 2, -df4$effect_size, df4$effect_size) 
 
+# write.csv(df4, "processed_data.csv")
+
+```
+## Making species tree
+
+```{r, eval = FALSE}
+
+length(unique(df4$Species)) #31 species
+unique(df4$Species)
+
+taxa <- tnrs_match_names(unique(df4$Species))
+table(taxa$approximate_match) #31
+
+# mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+#HTTP failure: 400 [/v3/tree_of_life/induced_subtree] Error: node_id 'ott3411771' was not found!list(ott3411771 = "pruned_ott_id")
+
+taxa[taxa[["ott_id"]] == "3411771", ] #gryllus_bimaculatus 
+df4$Species[df4$Species == "Gryllus_bimaculatus"]  <- "Gryllus_bimaculata"
+df4$Species[df4$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
+taxa <- tnrs_match_names(unique(df4$Species))
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name") # comes up with warning about dropping singleton nodes
+
+sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) #"Drosophila_melanogaster" "Gadus_morhua"            "Gryllus_bimaculata"      "Sus_domestica"  names not matching
+#allocating drosophila melanogaster to wrong ottID
+#changing names of other species
+
+# plot(mytree, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+
+#allocating correct OTTID
+inspect(taxa, taxon_name = "Drosophila_melanogaster")
+taxa <- updf4e(taxa, taxon_name = "Drosophila_melanogaster", new_row_number = 1)
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+
+df4$Species[df4$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+# mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+# changing tip labels
+mytree$tip.label[mytree$tip.label == "Sus_scrofa_domesticus"]  <- "Sus_domestica"
+mytree$tip.label[mytree$tip.label == "Gadus_morhua_(species_in_domain_Eukaryota)"]  <- "Gadus_morhua"
+
+sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) # all names match
+
+plot(mytree, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+str(mytree)
+is.binary.tree(mytree)
+
+write.tree(mytree, file = "species_tree.tre")
+```
+## Calculating Zr and Variance
+
+```{r, eval = FALSE}
+zr <- escalc(measure = "ZCOR", ni = dat$N, ri = dat$effect_size2)
+
+#adding back to dataframe 
+
+df5 <- bind_cols(dat, zr)
+
+write.csv(df5, "processed_data.csv")
+
+```
+
+
+# Data exploration
+
+```{r, eval = FALSE}
+#number of effect sizes
+
+length(unique(dat$effect_size2)) #note that effect_size2 has the effect size flipped so that higher = better
+
+#number of studies
+
+length(unique(dat$Study_ID))
+
+# Publication year range
+
+min(dat$Year_published)
+max(dat$Year_published)
 ```
 
 # Analysis {.tabset}
 
 ## Global effect size
 
+```{r}
+
+branchlength<- compute.brlen(tree, method="Grafen", power=1)
+VCV_species <- vcv(branchlength, corr=TRUE)
+
+
+m0 <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID,
+                                            ~1|Effectsize_ID,
+                                            ~1|Species),
+             R=list(Species = VCV_species),
+             data = dat)
+
+summary(m0)
+
+i2_ml(m0)
+
+```
+
+```{r}
+orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
+ 
+```
