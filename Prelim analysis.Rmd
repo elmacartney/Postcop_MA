@@ -16,13 +16,13 @@ pacman::p_load(tidyverse,
                rotl,
                ape,
                phytools,
-               MCMCglmm)
+               ggtree,
+               ggtreeExtra)
 ```
 
 ## Loading data and functions
 ```{r, message = FALSE}
 # dat <- read_csv(here("Data", "Data_raw.csv"))
-# Load custom function to extract data
 
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
@@ -164,7 +164,44 @@ length(unique(dat$Study_ID))
 
 min(dat$Year_published)
 max(dat$Year_published)
+
+#number of species
+length(unique(dat$Species))
+
+#number of classes
+length(unique(dat$Class))
+
+#number of classes
+dat %>%
+  group_by(Class) %>%
+  summarise(n = n_distinct(Study_ID))
+
+
 ```
+
+## Figure of species and class
+
+```{r}
+sample_data <- count(dat, Species)
+sample_data <- as.data.frame(sample_data)
+sample_data2 <- mutate(sample_data, tip.label = Species)
+
+tree$tip.label <- strip_ott_ids(tree$tip.label, remove_underscores = TRUE)
+
+sample_data3 <- left_join(sample_data2, dat[, c("Species", "Class")],
+    by = "Species")
+
+sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
+
+sample_data4$Species <- as.factor(sample_data4$Species)
+sample_data4$tip.label <- as.factor(sample_data4$tip.label)
+sample_data4$Class <- as.factor(sample_data4$Class)
+
+cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
+
+tree2 <- ggtree(tree, layout = "circular")
+```
+
 
 # Analysis {.tabset}
 
