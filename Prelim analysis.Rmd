@@ -154,7 +154,8 @@ write.csv(df5, "processed_data.csv")
 ```{r, eval = FALSE}
 #number of effect sizes
 
-length(unique(dat$effect_size2)) #note that effect_size2 has the effect size flipped so that higher = better
+length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
+#why does data go down to 106 then?
 
 #number of studies
 
@@ -176,6 +177,12 @@ dat %>%
   group_by(Class) %>%
   summarise(n = n_distinct(Study_ID))
 
+#traits
+dat %>%
+  group_by(PC_type) %>%
+  summarise(n = n_distinct(effect_size2))
+
+#TODO need to remove studies with no ES
 
 ```
 
