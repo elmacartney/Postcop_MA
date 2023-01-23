@@ -24,6 +24,8 @@ pacman::p_load(tidyverse,
 ```{r, message = FALSE}
 # dat <- read_csv(here("Data", "Data_raw.csv"))
 
+#TODO re export processed data
+
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
 tree <- read.tree(file = "species_tree.tre") #loading phylogenetic tree
@@ -180,10 +182,19 @@ dat %>%
 #traits
 dat %>%
   group_by(PC_type) %>%
-  summarise(n = n_distinct(effect_size2))
+  summarise(n = n_distinct(Effectsize_ID))
 
-#TODO need to remove studies with no ES
+# Cause of PC variation 
 
+dat %>%
+  group_by(PC_variation_cause) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+# rearing type
+
+dat %>%
+  group_by(Rearing_type) %>%
+  summarise(n = n_distinct(Study_ID))
 ```
 
 ## Figure of species and class
@@ -230,9 +241,153 @@ summary(m0)
 
 i2_ml(m0)
 
+#TODO how do I get pagel lambda / how much variation is explained due to phylogeny?
+
 ```
 
 ```{r}
 orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
  
 ```
+
+## Meta-regression {.tabset}
+
+### Traits
+
+```{r}
+
+dat$PC_type<-as.factor(dat$PC_type)
+
+#TODO need to remove trait 2 (testes size)
+
+m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat)
+
+
+summary(m1)
+
+r2_ml(m1)
+
+
+fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+```
+
+### Trait variation cause
+
+```{r}
+
+dat$PC_variation_cause<-as.factor(dat$PC_variation_cause)
+
+m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m2)
+
+r2_ml(m2)
+
+
+fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+fig.3
+
+```
+
+### Lab vs Wild-caught
+
+```{r}
+
+dat$Rearing_type<-as.factor(dat$Rearing_type)
+
+#TODO need to remove 3 (agriculture)
+
+m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m3)
+
+r2_ml(m3)
+
+
+fig.4 <- orchard_plot(m3, mod = "Rearing_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+fig.4
+
+```
+
+### Internal vs external fertilisation
+
+```{r}
+
+dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
+
+m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m4)
+
+r2_ml(m4)
+
+
+fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+fig.5 #no difference between fertilisation mode but 
+#TODO lets looks at subanalysis. Perhaps different traits are doing different things
+
+```
+
+### Precedence 
+
+```{r}
+#TODO need to think about this category some more
+#TODO could also do subanalysis
+#TODO Not sure how to deal with this category. Might be too hard
+
+dat$Precendence<-as.factor(dat$Precendence)
+
+m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m5)
+
+r2_ml(m5)
+
+
+fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+fig.6
+```
+
+### Competition order 
+
+```{r}
+#TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal
+
+dat$Competition_order<-as.factor(dat$Competition_order)
+
+m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m6)
+
+r2_ml(m6)
+
+
+fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+fig.7
+```
+
+
