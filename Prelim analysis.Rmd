@@ -260,14 +260,19 @@ orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = d
 
 ```{r}
 
-dat$PC_type<-as.factor(dat$PC_type)
+#removing trait 2 (testes size)
+# 
+dat1 <- subset(dat, PC_type !=2)
 
-#TODO need to remove trait 2 (testes size)
+dat1$PC_type<-as.factor(dat1$PC_type)
+
+levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+                    
 
 m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
              R=list(Species = VCV_species),
              test = "t",
-             data = dat)
+             data = dat1)
 
 
 summary(m1)
@@ -275,7 +280,10 @@ summary(m1)
 r2_ml(m1)
 
 
-fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45))
+
+fig.2
 
 ```
 
@@ -284,6 +292,11 @@ fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat, xlab 
 ```{r}
 
 dat$PC_variation_cause<-as.factor(dat$PC_variation_cause)
+
+levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "experimental selection" = "5", "other" = "6")
+
+#TODO should we remove 'other'?
+
 
 m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
              R=list(Species = VCV_species),
@@ -295,7 +308,8 @@ summary(m2)
 r2_ml(m2)
 
 
-fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45))
 
 fig.3
 
@@ -305,21 +319,28 @@ fig.3
 
 ```{r}
 
-dat$Rearing_type<-as.factor(dat$Rearing_type)
+#removing 3 (agriculture)
 
-#TODO need to remove 3 (agriculture)
+dat2 <- subset(dat, Rearing_type !=3)
+
+dat2$Rearing_type<-as.factor(dat2$Rearing_type)
+
+levels(dat2$Rearing_type) <- list("wild" = "1", "wild caught" = "2", "lab" = "4", "other/unclear" = "6")
+
 
 m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
              R=list(Species = VCV_species),
              test = "t",
-             data = dat)
+             data = dat2)
 
 summary(m3)
 
 r2_ml(m3)
 
+#TODO should we remove other/unclear? I think so
 
-fig.4 <- orchard_plot(m3, mod = "Rearing_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+fig.4 <- orchard_plot(m3, mod = "Rearing_type", group = "Study_ID", data = dat2, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45))
 
 fig.4
 
@@ -331,6 +352,8 @@ fig.4
 
 dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
 
+levels(dat$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
 m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
              R=list(Species = VCV_species),
              test = "t",
@@ -341,13 +364,73 @@ summary(m4)
 r2_ml(m4)
 
 
-fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
 
-fig.5 #no difference between fertilisation mode but 
-#TODO lets looks at subanalysis. Perhaps different traits are doing different things
+fig.5 #no difference between fertilisation mode but lets looks at subanalysis. Perhaps different traits are doing different things.
+
+```
+#### Internal sub-analysis
+
+```{r}
+
+dat3 <- subset(dat, Fertilisation_mode == "internal")
+
+dat3 <- subset(dat3, PC_type !=2)
+
+dat3$PC_type<-as.factor(dat3$PC_type)
+
+levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m4a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat3)
+
+summary(m4a)
+r2_ml(m4a)
+
+
+fig.5a <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+# fig.5a
 
 ```
 
+#### External sub-analysis
+
+```{r}
+dat4 <- subset(dat, Fertilisation_mode == "external")
+
+dat4 <- subset(dat4, PC_type !=2)
+
+dat4$PC_type<-as.factor(dat4$PC_type)
+
+levels(dat4$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m4b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat4)
+
+summary(m4b)
+r2_ml(m4b)
+
+
+fig.5b <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+# fig.5a
+
+```
+
+```{r}
+fig.5c <- (fig.5a + fig.5b)
+fig.5c #no differences in traits between internal and external fertilisers
+```
 ### Precedence 
 
 ```{r}
@@ -379,6 +462,9 @@ fig.6
 
 dat$Competition_order<-as.factor(dat$Competition_order)
 
+
+levels(dat$Competition_order) <- list("P1" = "1", "P2" = "2", "Random mixing" = "3", "mating order controlled for" = "4")
+
 m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
              R=list(Species = VCV_species),
              test = "t",
@@ -389,9 +475,68 @@ summary(m6)
 r2_ml(m6)
 
 
-fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45)) 
 
 fig.7
 ```
 
+#### P1 and P2 sub-analysis
 
+```{r}
+#have grouped p1 and p2 because both are assumed to be loaded raffles. 
+
+dat5 <- subset(dat, Competition_order  %in% c("P1", "P2"))
+
+dat5$PC_type<-as.factor(dat5$PC_type)
+
+levels(dat5$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat5)
+
+summary(m6a)
+r2_ml(m6a)
+
+
+fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+#TODO need to remove normality, and velocity
+```
+
+#### Random mixing sub-analysis
+
+```{r}
+
+dat6 <- subset(dat, Competition_order == "Random mixing")
+
+dat6$PC_type<-as.factor(dat6$PC_type)
+
+levels(dat6$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
+             R=list(Species = VCV_species),
+             test = "t",
+             data = dat6)
+
+summary(m6b)
+r2_ml(m6b)
+
+
+fig.7b <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+```
+
+
+```{r}
+fig.7c <- (fig.7a + fig.7b)
+fig.7c 
+
+#TODO could instead do sub analyses within traits
+```
