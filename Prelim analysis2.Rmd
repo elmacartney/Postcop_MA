@@ -223,175 +223,175 @@ tree2 <- ggtree(tree, layout = "circular")
 
 # Analysis {.tabset}
 
-## Global effect size
+<!-- ## Global effect size -->
 
-```{r}
+<!-- ```{r} -->
 
-dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
-```
+<!-- dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus" -->
+<!-- ``` -->
 
-```{r, eval = FALSE}
-branchlength<- compute.brlen(tree, method="Grafen", power=1)
-VCV_species <- vcv(branchlength, corr=TRUE)
+<!-- ```{r} -->
+<!-- branchlength<- compute.brlen(tree, method="Grafen", power=1) -->
+<!-- VCV_species <- vcv(branchlength, corr=TRUE) -->
 
 
-m0 <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID,
-                                            ~1|Effectsize_ID,
-                                            ~1|Species),
-             R=list(Species = VCV_species),
-             data = dat)
+<!-- m0 <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID, -->
+<!--                                             ~1|Effectsize_ID, -->
+<!--                                             ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              data = dat) -->
 
-summary(m0)
+<!-- summary(m0) -->
 
-i2_ml(m0)
+<!-- i2_ml(m0) -->
 
-#TODO how do I get pagel lambda / how much variation is explained due to phylogeny?
+<!-- #TODO how do I get pagel lambda / how much variation is explained due to phylogeny? -->
 
-```
+<!-- ``` -->
 
-```{r}
-orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
- 
-```
+<!-- ```{r} -->
+<!-- orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat)  -->
 
-## Meta-regression {.tabset}
+<!-- ``` -->
 
-### Traits
+<!-- ## Meta-regression {.tabset} -->
 
-```{r}
+<!-- ### Traits -->
 
-dat$PC_type<-as.factor(dat$PC_type)
+<!-- ```{r} -->
 
-#TODO need to remove trait 2 (testes size)
+<!-- dat$PC_type<-as.factor(dat$PC_type) -->
 
-m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
-             test = "t",
-             data = dat)
+<!-- #TODO need to remove trait 2 (testes size) -->
 
+<!-- m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              test = "t", -->
+<!--              data = dat) -->
 
-summary(m1)
 
-r2_ml(m1)
+<!-- summary(m1) -->
 
+<!-- r2_ml(m1) -->
 
-fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
 
-```
+<!-- fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)  -->
 
-### Trait variation cause
+<!-- ``` -->
 
-```{r}
+<!-- ### Trait variation cause -->
 
-dat$PC_variation_cause<-as.factor(dat$PC_variation_cause)
+<!-- ```{r} -->
 
-m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
-             test = "t",
-             data = dat)
+<!-- dat$PC_variation_cause<-as.factor(dat$PC_variation_cause) -->
 
-summary(m2)
+<!-- m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              test = "t", -->
+<!--              data = dat) -->
 
-r2_ml(m2)
+<!-- summary(m2) -->
 
+<!-- r2_ml(m2) -->
 
-fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
 
-fig.3
+<!-- fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)  -->
 
-```
+<!-- fig.3 -->
 
-### Lab vs Wild-caught
+<!-- ``` -->
 
-```{r}
+<!-- ### Lab vs Wild-caught -->
 
-dat$Rearing_type<-as.factor(dat$Rearing_type)
+<!-- ```{r} -->
 
-#TODO need to remove 3 (agriculture)
+<!-- dat$Rearing_type<-as.factor(dat$Rearing_type) -->
 
-m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
-             test = "t",
-             data = dat)
+<!-- #TODO need to remove 3 (agriculture) -->
 
-summary(m3)
+<!-- m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              test = "t", -->
+<!--              data = dat) -->
 
-r2_ml(m3)
+<!-- summary(m3) -->
 
+<!-- r2_ml(m3) -->
 
-fig.4 <- orchard_plot(m3, mod = "Rearing_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
 
-fig.4
+<!-- fig.4 <- orchard_plot(m3, mod = "Rearing_type", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)  -->
 
-```
+<!-- fig.4 -->
 
-### Internal vs external fertilisation
+<!-- ``` -->
 
-```{r}
+<!-- ### Internal vs external fertilisation -->
 
-dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
+<!-- ```{r} -->
 
-m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
-             test = "t",
-             data = dat)
+<!-- dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode) -->
 
-summary(m4)
+<!-- m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              test = "t", -->
+<!--              data = dat) -->
 
-r2_ml(m4)
+<!-- summary(m4) -->
 
+<!-- r2_ml(m4) -->
 
-fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
 
-fig.5 #no difference between fertilisation mode but 
-#TODO lets looks at subanalysis. Perhaps different traits are doing different things
+<!-- fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)  -->
 
-```
+<!-- fig.5 #no difference between fertilisation mode but  -->
+<!-- #TODO lets looks at subanalysis. Perhaps different traits are doing different things -->
 
-### Precedence 
+<!-- ``` -->
 
-```{r}
-#TODO need to think about this category some more
-#TODO could also do subanalysis
-#TODO Not sure how to deal with this category. Might be too hard
+<!-- ### Precedence  -->
 
-dat$Precendence<-as.factor(dat$Precendence)
+<!-- ```{r} -->
+<!-- #TODO need to think about this category some more -->
+<!-- #TODO could also do subanalysis -->
+<!-- #TODO Not sure how to deal with this category. Might be too hard -->
 
-m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
-             test = "t",
-             data = dat)
+<!-- dat$Precendence<-as.factor(dat$Precendence) -->
 
-summary(m5)
+<!-- m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              test = "t", -->
+<!--              data = dat) -->
 
-r2_ml(m5)
+<!-- summary(m5) -->
 
+<!-- r2_ml(m5) -->
 
-fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
 
-fig.6
-```
+<!-- fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)  -->
 
-### Competition order 
+<!-- fig.6 -->
+<!-- ``` -->
 
-```{r}
-#TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal
+<!-- ### Competition order  -->
 
-dat$Competition_order<-as.factor(dat$Competition_order)
+<!-- ```{r} -->
+<!-- #TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal -->
 
-m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
-             test = "t",
-             data = dat)
+<!-- dat$Competition_order<-as.factor(dat$Competition_order) -->
 
-summary(m6)
+<!-- m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species), -->
+<!--              R=list(Species = VCV_species), -->
+<!--              test = "t", -->
+<!--              data = dat) -->
 
-r2_ml(m6)
+<!-- summary(m6) -->
 
+<!-- r2_ml(m6) -->
 
-fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
 
-fig.7
-```
+<!-- fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)  -->
+
+<!-- fig.7 -->
+<!-- ``` -->
 
 
