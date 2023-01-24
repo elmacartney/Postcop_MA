@@ -7,7 +7,7 @@ output: html_document
 # Setting up {.tabset}
 
 ## Loading packages
-```{r}
+```{r, message = FALSE}
 pacman::p_load(tidyverse, 
                here, 
                metafor, 
@@ -22,9 +22,7 @@ pacman::p_load(tidyverse,
 
 ## Loading data and functions
 ```{r, message = FALSE}
-# dat <- read_csv(here("Data", "Data_raw.csv"))
-
-#TODO re export processed data
+# dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
 
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
@@ -84,6 +82,7 @@ df4$effect_size2<- ifelse(df4$Coin == 2, -df4$effect_size, df4$effect_size)
 # write.csv(df4, "processed_data.csv")
 
 ```
+
 ## Making species tree
 
 ```{r, eval = FALSE}
@@ -137,6 +136,7 @@ str(mytree)
 
 write.tree(mytree, file = "species_tree.tre")
 ```
+
 ## Calculating Zr and Variance
 
 ```{r, eval = FALSE}
@@ -153,7 +153,7 @@ write.csv(df5, "processed_data.csv")
 
 # Data exploration
 
-```{r, eval = FALSE}
+```{r}
 #number of effect sizes
 
 length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
@@ -217,9 +217,9 @@ sample_data4$Class <- as.factor(sample_data4$Class)
 
 cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
 
+#TODO need to add classes etc to figure
 tree2 <- ggtree(tree, layout = "circular")
 ```
-
 
 # Analysis {.tabset}
 
@@ -227,6 +227,10 @@ tree2 <- ggtree(tree, layout = "circular")
 
 ```{r}
 
+dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+```
+
+```{r}
 branchlength<- compute.brlen(tree, method="Grafen", power=1)
 VCV_species <- vcv(branchlength, corr=TRUE)
 
