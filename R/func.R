@@ -1,5 +1,8 @@
 # functions
 
+# TODO cehck N
+
+
 ##########
 # 2 groups
 ##########

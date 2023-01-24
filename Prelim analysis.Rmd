@@ -140,6 +140,8 @@ write.tree(mytree, file = "species_tree.tre")
 ## Calculating Zr and Variance
 
 ```{r, eval = FALSE}
+#TODO - halve depdent ones 
+
 zr <- escalc(measure = "ZCOR", ni = df4$N, ri = df4$effect_size2)
 
 #adding back to dataframe 
@@ -228,6 +230,8 @@ tree2 <- ggtree(tree, layout = "circular")
 ```{r}
 
 dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+
+dat$Phylogeny <- gsub('_',' ',dat$Species)
 ```
 
 ```{r, eval = FALSE}
@@ -235,17 +239,31 @@ branchlength<- compute.brlen(tree, method="Grafen", power=1)
 VCV_species <- vcv(branchlength, corr=TRUE)
 
 
-m0 <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID,
-                                            ~1|Effectsize_ID,
-                                            ~1|Species),
-             R=list(Species = VCV_species),
+m0 <- rma.mv(yi = yi, V = vi, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              data = dat)
 
 summary(m0)
 
-i2_ml(m0)
+round(i2_ml(m0), 2)
+
+m0b <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID,
+                                            ~1|Effectsize_ID),
+                                            #~1|Species,
+                                            #~1|Phylogeny),
+             #R=list(Phylogeny = VCV_species),
+             data = dat)
+
+summary(m0b)
+
+anova(m0b, m0)
 
 #TODO how do I get pagel lambda / how much variation is explained due to phylogeny?
+# TODO - conducting the likelihood ratio tests - use anova(mod1, mod2)
 
 ```
 
@@ -269,8 +287,12 @@ dat1$PC_type<-as.factor(dat1$PC_type)
 levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
                     
 
-m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat1)
 
@@ -298,8 +320,12 @@ levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticit
 #TODO should we remove 'other'?
 
 
-m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat)
 
@@ -328,8 +354,12 @@ dat2$Rearing_type<-as.factor(dat2$Rearing_type)
 levels(dat2$Rearing_type) <- list("wild" = "1", "wild caught" = "2", "lab" = "4", "other/unclear" = "6")
 
 
-m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat2)
 
@@ -348,14 +378,20 @@ fig.4
 
 ### Internal vs external fertilisation
 
+
+
 ```{r}
 
 dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
 
 levels(dat$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
 
-m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat)
 
@@ -370,6 +406,31 @@ fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data =
 fig.5 #no difference between fertilisation mode but lets looks at subanalysis. Perhaps different traits are doing different things.
 
 ```
+
+#### Erin to fill this
+
+
+```{r}
+
+dat$Fert_trait <- paste(dat$Fertilisation_mode, dat$PC_type, sep = " ")
+
+m4c <- rma.mv(yi = yi, V = vi, mod = ~Fert_trait-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m4c)
+
+fig.5c <- orchard_plot(m4c, mod = "Fert_trait", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+fig.5c
+```
+
 #### Internal sub-analysis
 
 ```{r}
@@ -383,8 +444,12 @@ dat3$PC_type<-as.factor(dat3$PC_type)
 levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m4a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m4a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat3)
 
@@ -395,7 +460,7 @@ r2_ml(m4a)
 fig.5a <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
-# fig.5a
+fig.5a
 
 ```
 
@@ -411,8 +476,12 @@ dat4$PC_type<-as.factor(dat4$PC_type)
 levels(dat4$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m4b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m4b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat4)
 
@@ -423,7 +492,7 @@ r2_ml(m4b)
 fig.5b <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
-# fig.5a
+fig.5b
 
 ```
 
@@ -440,8 +509,12 @@ fig.5c #no differences in traits between internal and external fertilisers
 
 dat$Precendence<-as.factor(dat$Precendence)
 
-m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat)
 
@@ -465,14 +538,30 @@ dat$Competition_order<-as.factor(dat$Competition_order)
 
 levels(dat$Competition_order) <- list("P1" = "1", "P2" = "2", "Random mixing" = "3", "mating order controlled for" = "4")
 
-m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat)
 
 summary(m6)
 
 r2_ml(m6)
+
+
+m6b <- rma.mv(yi = yi, V = vi, mod = ~Competition_order,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m6b)
 
 
 fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
@@ -493,8 +582,12 @@ dat5$PC_type<-as.factor(dat5$PC_type)
 levels(dat5$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m6a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m6a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat5)
 
@@ -519,8 +612,12 @@ dat6$PC_type<-as.factor(dat6$PC_type)
 levels(dat6$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m6b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  random = list(~1|Study_ID,                        ~1|Effectsize_ID, ~1|Species),
-             R=list(Species = VCV_species),
+m6b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
              test = "t",
              data = dat6)
 
