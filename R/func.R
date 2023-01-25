@@ -209,3 +209,10 @@ p_vals_b <- function(p_val, N, reverse = FALSE){ # n2 = higher/larger group
     r_b = r_b*(-1)}
   r_b
 }
+
+# if depends - vi 
+
+vi_zr_depend <- function(N){
+  vi <- (N/2 - 3)
+  vi
+}

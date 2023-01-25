@@ -161,7 +161,10 @@ write.tree(mytree, file = "species_tree.tre")
 ## Calculating Zr and Variance
 
 ```{r, eval = FALSE}
-#TODO - halve depdent ones 
+#TODO - halve dependent ones  - DONE
+
+df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
+
 
 zr <- escalc(measure = "ZCOR", ni = df4$N, ri = df4$effect_size2)
 
