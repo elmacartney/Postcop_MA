@@ -8,6 +8,9 @@ output: html_document
 
 ## Loading packages
 ```{r, message = FALSE}
+
+devtools::install_github('Mikata-Project/ggthemr', force = TRUE)
+
 pacman::p_load(tidyverse, 
                here, 
                metafor, 
@@ -16,8 +19,13 @@ pacman::p_load(tidyverse,
                rotl,
                ape,
                phytools,
+               ggplot2,
+               ggsignif,
                ggtree,
-               ggtreeExtra)
+               ggthemr,
+               ggtreeExtra,
+               ggalluvial,
+               clubSandwich)
 ```
 
 ## Loading data and functions
@@ -153,7 +161,9 @@ write.csv(df5, "processed_data.csv")
 ```
 
 
-# Data exploration
+# Data exploration {.tabset}
+
+## Sample sizes
 
 ```{r}
 #number of effect sizes
@@ -197,6 +207,72 @@ dat %>%
 dat %>%
   group_by(Rearing_type) %>%
   summarise(n = n_distinct(Study_ID))
+```
+
+## Alluvial plots
+
+### Fertilisation mode, competition order
+
+```{r}
+
+freq <- as.data.frame(table(dat$Fertilisation_mode, dat$Competition_order)) %>%
+  rename("Fertilisation_mode" = Var1, "Competition_order" = Var2)
+
+# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
+
+levels(freq$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+levels(freq$Competition_order) <- list("P1" = "1", "P2" = "2","Random mixing" = "3", "mating order controlled for" = "4")
+
+
+p <- ggplot(data = freq, aes(axis1 = Fertilisation_mode, axis2 = Competition_order, y = Freq)) +
+    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Competition order"), expand = c(0.15, 0.05), position = "top") 
+
+p
+```
+
+### Traits, fertilisation mode
+
+```{r}
+
+freq2 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type)) %>%
+  rename("Fertilisation_mode" = Var1, "Trait" = Var2)
+
+# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
+
+levels(freq2$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+levels(freq2$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+p2 <- ggplot(data = freq2, aes(axis1 = Fertilisation_mode, axis2 = Trait, y = Freq)) +
+    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Trait"), expand = c(0.15, 0.05), position = "top") 
+
+p2
 ```
 
 ## Figure of species and class
