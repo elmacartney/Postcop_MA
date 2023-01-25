@@ -4,6 +4,19 @@ author: "Erin Macartney"
 date: '2023-01-10'
 output: html_document
 ---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE,
+cache = TRUE, 
+tidy = TRUE, 
+echo = TRUE
+)
+
+rm(list = ls())
+```
+
 # Setting up {.tabset}
 
 ## Loading packages
@@ -289,14 +302,19 @@ sample_data3 <- left_join(sample_data2, dat[, c("Species", "Class")],
 
 sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
 
+sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
+
 sample_data4$Species <- as.factor(sample_data4$Species)
 sample_data4$tip.label <- as.factor(sample_data4$tip.label)
 sample_data4$Class <- as.factor(sample_data4$Class)
 
 cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
 
-#TODO need to add classes etc to figure
-tree2 <- ggtree(tree, layout = "circular")
+#TODO Can't get this figure to work
+
+tree2 <- ggtree(tree)%<+% sample_data4 + aes(col = Class) +
+    theme(legend.position = "bottom") + scale_colour_manual(values = cols)
+
 ```
 
 # Analysis {.tabset}
@@ -315,7 +333,10 @@ branchlength<- compute.brlen(tree, method="Grafen", power=1)
 VCV_species <- vcv(branchlength, corr=TRUE)
 
 
-m0 <- rma.mv(yi = yi, V = vi, 
+VCV <- impute_covariance_matrix(vi = dat$vi, cluster = dat$Study_ID, r = 0.5)
+
+
+m0 <- rma.mv(yi = yi, V = VCV, 
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -325,9 +346,9 @@ m0 <- rma.mv(yi = yi, V = vi,
 
 summary(m0)
 
-round(i2_ml(m0), 2)
+round(i2_ml(m0), 2) #both species and phylo = 0% variation
 
-m0b <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID,
+m0b <- rma.mv(yi = yi, V = VCV, random = list(~1|Study_ID,
                                             ~1|Effectsize_ID),
                                             #~1|Species,
                                             #~1|Phylogeny),
@@ -336,10 +357,8 @@ m0b <- rma.mv(yi = yi, V = vi, random = list(~1|Study_ID,
 
 summary(m0b)
 
-anova(m0b, m0)
+anova(m0b, m0) # reduced model as slightly lower ARC (delta = 4)
 
-#TODO how do I get pagel lambda / how much variation is explained due to phylogeny?
-# TODO - conducting the likelihood ratio tests - use anova(mod1, mod2)
 
 ```
 
@@ -360,10 +379,12 @@ dat1 <- subset(dat, PC_type !=2)
 
 dat1$PC_type<-as.factor(dat1$PC_type)
 
+VCV1 <- impute_covariance_matrix(vi = dat1$vi, cluster = dat1$Study_ID, r = 0.5)
+
 levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
                     
 
-m1 <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+m1 <- rma.mv(yi = yi, V = VCV1, mod = ~PC_type-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -396,7 +417,7 @@ levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticit
 #TODO should we remove 'other'?
 
 
-m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause-1,  
+m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -427,10 +448,12 @@ dat2 <- subset(dat, Rearing_type !=3)
 
 dat2$Rearing_type<-as.factor(dat2$Rearing_type)
 
+VCV2 <- impute_covariance_matrix(vi = dat2$vi, cluster = dat2$Study_ID, r = 0.5)
+
 levels(dat2$Rearing_type) <- list("wild" = "1", "wild caught" = "2", "lab" = "4", "other/unclear" = "6")
 
 
-m3 <- rma.mv(yi = yi, V = vi, mod = ~Rearing_type-1,  
+m3 <- rma.mv(yi = yi, V = VCV2, mod = ~Rearing_type-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -462,7 +485,7 @@ dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
 
 levels(dat$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
 
-m4 <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode-1,  
+m4 <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -483,14 +506,14 @@ fig.5 #no difference between fertilisation mode but lets looks at subanalysis. P
 
 ```
 
-#### Erin to fill this
+#### Combined fert mode and trait
 
 
 ```{r}
 
 dat$Fert_trait <- paste(dat$Fertilisation_mode, dat$PC_type, sep = " ")
 
-m4c <- rma.mv(yi = yi, V = vi, mod = ~Fert_trait-1,  
+m4c <- rma.mv(yi = yi, V = VCV, mod = ~Fert_trait-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -515,12 +538,16 @@ dat3 <- subset(dat, Fertilisation_mode == "internal")
 
 dat3 <- subset(dat3, PC_type !=2)
 
+VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
+
+
 dat3$PC_type<-as.factor(dat3$PC_type)
+
 
 levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m4a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+m4a <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -547,12 +574,15 @@ dat4 <- subset(dat, Fertilisation_mode == "external")
 
 dat4 <- subset(dat4, PC_type !=2)
 
+VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
+
+
 dat4$PC_type<-as.factor(dat4$PC_type)
 
 levels(dat4$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m4b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+m4b <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -576,6 +606,7 @@ fig.5b
 fig.5c <- (fig.5a + fig.5b)
 fig.5c #no differences in traits between internal and external fertilisers
 ```
+
 ### Precedence 
 
 ```{r}
@@ -614,7 +645,7 @@ dat$Competition_order<-as.factor(dat$Competition_order)
 
 levels(dat$Competition_order) <- list("P1" = "1", "P2" = "2", "Random mixing" = "3", "mating order controlled for" = "4")
 
-m6 <- rma.mv(yi = yi, V = vi, mod = ~Competition_order-1,  
+m6 <- rma.mv(yi = yi, V = VCV, mod = ~Competition_order-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -655,10 +686,13 @@ dat5 <- subset(dat, Competition_order  %in% c("P1", "P2"))
 
 dat5$PC_type<-as.factor(dat5$PC_type)
 
+VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+
+
 levels(dat5$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m6a <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+m6a <- rma.mv(yi = yi, V = VCV5, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -685,10 +719,13 @@ dat6 <- subset(dat, Competition_order == "Random mixing")
 
 dat6$PC_type<-as.factor(dat6$PC_type)
 
+VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+
+
 levels(dat6$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m6b <- rma.mv(yi = yi, V = vi, mod = ~PC_type-1,  
+m6b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
