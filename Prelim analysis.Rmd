@@ -22,7 +22,7 @@ rm(list = ls())
 ## Loading packages
 ```{r, message = FALSE}
 
-devtools::install_github('Mikata-Project/ggthemr', force = TRUE)
+# devtools::install_github('Mikata-Project/ggthemr', force = TRUE)
 
 pacman::p_load(tidyverse, 
                here, 
@@ -51,6 +51,8 @@ tree <- read.tree(file = "species_tree.tre") #loading phylogenetic tree
 ```
 
 ## Calculating r
+
+Note that this code runs on Data_raw.csv not Data_processed.csv
 ```{r, eval = FALSE}
 effect_size_group2 <- with(dat, mapply(group2, 
                                        mean_low, mean_high, 
@@ -161,12 +163,11 @@ write.tree(mytree, file = "species_tree.tre")
 ## Calculating Zr and Variance
 
 ```{r, eval = FALSE}
-#TODO - halve dependent ones  - DONE
 
 df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
 
 
-zr <- escalc(measure = "ZCOR", ni = df4$N, ri = df4$effect_size2)
+zr <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2)
 
 #adding back to dataframe 
 
@@ -311,12 +312,12 @@ sample_data4$Species <- as.factor(sample_data4$Species)
 sample_data4$tip.label <- as.factor(sample_data4$tip.label)
 sample_data4$Class <- as.factor(sample_data4$Class)
 
-cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
 
 #TODO Can't get this figure to work
 
-tree2 <- ggtree(tree)%<+% sample_data4 + aes(col = Class) +
-    theme(legend.position = "bottom") + scale_colour_manual(values = cols)
+tree2 <- ggtree(tree)
+tree3 <- tree2 %<+% sample_data4 + geom_tippoint(aes(color = Class))+ scale_colour_manual(values = c("red", "green", "blue", "black", "yellow", "orange", "darkgreen"))
+
 
 ```
 
@@ -328,7 +329,14 @@ tree2 <- ggtree(tree)%<+% sample_data4 + aes(col = Class) +
 
 dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
 
+dat$Species[dat$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
 dat$Phylogeny <- gsub('_',' ',dat$Species)
+tree$tip.label<- gsub('_',' ',tree$tip.label)
+
+
+
+sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
 ```
 
 ```{r, eval = FALSE}
