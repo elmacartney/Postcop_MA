@@ -164,6 +164,7 @@ write.tree(mytree, file = "species_tree.tre")
 
 ```{r, eval = FALSE}
 
+
 df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
 
 
@@ -359,16 +360,16 @@ summary(m0)
 
 round(i2_ml(m0), 2) #both species and phylo = 0% variation
 
-m0b <- rma.mv(yi = yi, V = VCV, random = list(~1|Study_ID,
-                                            ~1|Effectsize_ID),
-                                            #~1|Species,
-                                            #~1|Phylogeny),
-             #R=list(Phylogeny = VCV_species),
-             data = dat)
-
-summary(m0b)
-
-anova(m0b, m0) # reduced model as slightly lower ARC (delta = 4)
+# m0b <- rma.mv(yi = yi, V = VCV, random = list(~1|Study_ID,
+#                                             ~1|Effectsize_ID),
+#                                             #~1|Species,
+#                                             #~1|Phylogeny),
+#              #R=list(Phylogeny = VCV_species),
+#              data = dat)
+# 
+# summary(m0b)
+# 
+# anova(m0b, m0) # reduced model as slightly lower ARC (delta = 4)
 
 
 ```
@@ -614,7 +615,7 @@ fig.5b
 ```
 
 ```{r}
-fig.5c <- (fig.5a + fig.5b)
+fig.5c <- (fig.5a + fig.5b)http://127.0.0.1:38297/graphics/plot_zoom_png?width=1200&height=900
 fig.5c #no differences in traits between internal and external fertilisers
 ```
 
@@ -646,7 +647,7 @@ fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, x
 fig.6
 ```
 
-### Competition order 
+7### Competition order 
 
 ```{r}
 #TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal
