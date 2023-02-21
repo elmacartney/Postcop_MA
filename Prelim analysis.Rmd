@@ -229,6 +229,39 @@ dat %>%
 
 ## Alluvial plots
 
+### Rearing type, Variation cause (For supplementary material)
+
+```{r}
+freq <- as.data.frame(table(dat$Rearing_type, dat$PC_variation_cause, dat$PC_type)) %>%
+  rename("Raring_type" = Var1, "PC_variation_cause" = Var2)
+
+# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
+
+levels(freq$Raring_type) <- list("wild" = "1", "wild caught" = "2", "agri/aquiculure" = "3", "lab" = "4", "zoo" = "5", "other/unclear" = "6")
+
+levels(freq$PC_variation_cause) <- list("natural" = "1", "plasticity" = "2","age" = "3", "direct manipulation" = "4", "selection" = "5", "other/unclear" = "6")
+
+p <- ggplot(data = freq, aes(axis1 = Raring_type, axis2 = PC_variation_cause, y = Freq)) +
+    geom_alluvium(aes(fill = Raring_type)) + geom_flow() + geom_stratum(aes(fill = Raring_type)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Raring type", "Variation cause"), expand = c(0.15, 0.05), position = "top") 
+
+p
+
+
+```
+
+
 ### Fertilisation mode, competition order
 
 ```{r}
