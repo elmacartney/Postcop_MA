@@ -260,7 +260,35 @@ p
 
 
 ```
+### Traits, variation cause
 
+```{r}
+
+freq1 <- as.data.frame(table(dat$PC_type, dat$PC_variation_cause, dat$PC_type)) %>%
+  rename("PC_type" = Var1, "PC_variation_cause" = Var2)
+
+levels(freq1$PC_variation_cause) <- list("natural" = "1", "plasticity" = "2","age" = "3", "direct manipulation" = "4", "selection" = "5", "other/unclear" = "6")
+
+levels(freq1$PC_type) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+p1 <- ggplot(data = freq1, aes(axis1 = PC_variation_cause, axis2 = PC_type, y = Freq)) +
+    geom_alluvium(aes(fill = PC_variation_cause)) + geom_flow() + geom_stratum(aes(fill = PC_variation_cause)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Variation cause", "Trait"), expand = c(0.15, 0.05), position = "top") 
+
+p1
+
+```
 
 ### Fertilisation mode, competition order
 
