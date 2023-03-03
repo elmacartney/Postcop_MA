@@ -564,6 +564,7 @@ dat3$PC_type<-as.factor(dat3$PC_type)
 
 
 levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
 
 
 m4a <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,  
