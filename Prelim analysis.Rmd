@@ -38,12 +38,13 @@ pacman::p_load(tidyverse,
                ggthemr,
                ggtreeExtra,
                ggalluvial,
+               patchwork,
                clubSandwich)
 ```
 
 ## Loading data and functions
 ```{r, message = FALSE}
-# dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
+# dat <- read_csv(here("Data", "Data_raw_crosschecked.csv")) #raw data was used for data processing below
 
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
@@ -183,7 +184,7 @@ write.csv(df5, "processed_data.csv")
 
 ## Sample sizes
 
-```{r}
+```{r, eval = FALSE}
 #number of effect sizes
 
 length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
@@ -227,106 +228,7 @@ dat %>%
   summarise(n = n_distinct(Study_ID))
 ```
 
-## Alluvial plots
-
-### Rearing type, Variation cause (For supplementary material)
-
-```{r}
-freq <- as.data.frame(table(dat$Rearing_type, dat$PC_variation_cause, dat$PC_type)) %>%
-  rename("Raring_type" = Var1, "PC_variation_cause" = Var2)
-
-# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
-
-levels(freq$Raring_type) <- list("wild" = "1", "wild caught" = "2", "agri/aquiculure" = "3", "lab" = "4", "zoo" = "5", "other/unclear" = "6")
-
-levels(freq$PC_variation_cause) <- list("natural" = "1", "plasticity" = "2","age" = "3", "direct manipulation" = "4", "selection" = "5", "other/unclear" = "6")
-
-p <- ggplot(data = freq, aes(axis1 = Raring_type, axis2 = PC_variation_cause, y = Freq)) +
-    geom_alluvium(aes(fill = Raring_type)) + geom_flow() + geom_stratum(aes(fill = Raring_type)) +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
-    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Raring type", "Variation cause"), expand = c(0.15, 0.05), position = "top") 
-
-p
-
-
-```
-
-
-### Fertilisation mode, competition order
-
-```{r}
-
-freq <- as.data.frame(table(dat$Fertilisation_mode, dat$Competition_order)) %>%
-  rename("Fertilisation_mode" = Var1, "Competition_order" = Var2)
-
-# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
-
-levels(freq$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
-
-levels(freq$Competition_order) <- list("P1" = "1", "P2" = "2","Random mixing" = "3", "mating order controlled for" = "4")
-
-
-p <- ggplot(data = freq, aes(axis1 = Fertilisation_mode, axis2 = Competition_order, y = Freq)) +
-    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
-    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Competition order"), expand = c(0.15, 0.05), position = "top") 
-
-p
-```
-
-### Traits, fertilisation mode
-
-```{r}
-
-freq2 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type)) %>%
-  rename("Fertilisation_mode" = Var1, "Trait" = Var2)
-
-# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
-
-levels(freq2$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
-
-levels(freq2$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
-
-
-p2 <- ggplot(data = freq2, aes(axis1 = Fertilisation_mode, axis2 = Trait, y = Freq)) +
-    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
-    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Trait"), expand = c(0.15, 0.05), position = "top") 
-
-p2
-```
-
-## Figure of species and class
+## Fig. 1
 
 ```{r}
 sample_data <- count(dat, Species)
@@ -355,6 +257,78 @@ tree3 <- tree2 %<+% sample_data4 + geom_tippoint(aes(color = Class))+ scale_colo
 
 ```
 
+
+## Fig. 2
+
+### Trait and variation cause
+
+```{r}
+freq2 <- as.data.frame(table(dat$PC_type, dat$PC_variation_cause)) %>%
+  rename("Trait" = Var1, "Variation_cause" = Var2)
+# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
+
+levels(freq2$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+levels(freq2$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "selection" = "5", "other/unclear" = "6")
+
+p2 <- ggplot(data = freq2, aes(axis1 = Variation_cause, axis2 = Trait, y = Freq)) +
+    geom_alluvium(aes(fill = Variation_cause)) + geom_flow() + geom_stratum(aes(fill = Variation_cause)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Variation cause", "Postcopulatory trait"), expand = c(0.15, 0.05), position = "top") 
+
+
+```
+
+
+### Fertilisation mode, Fertilisation method, mating order
+
+```{r}
+freq3 <- as.data.frame(table(dat$Fertilisation_mode, dat$Fertilisation_methods, dat$Competition_order)) %>%
+  rename("Fertilisation_mode" = Var1, "Fertilisation_method" = Var2, "Mating_order" = Var3)
+
+levels(freq3$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+levels(freq3$Fertilisation_method) <- list("natural" = "1", "artificial fertilisation" = "2", "other/unclear" = "3")
+
+levels(freq3$Mating_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3", "P1 and P2 (mating order controlled for)" = "4", "other/unclear" = "5")
+
+p3 <- ggplot(data = freq3, aes(axis1 = Fertilisation_mode, axis2 = Fertilisation_method, axis3 = Mating_order, y = Freq)) +
+    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Fertilisation method", "Mating order"), expand = c(0.15, 0.05), position = "top") 
+
+```
+
+```{r, warning= FALSE}
+
+Fig2 <- (p2 + p3) + plot_annotation(tag_levels = "A")
+
+Fig2
+
+#TODO need to clean up this figure
+
+```
+
 # Analysis {.tabset}
 
 ## Global effect size
@@ -370,7 +344,7 @@ tree$tip.label<- gsub('_',' ',tree$tip.label)
 
 
 
-sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
+# sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
 ```
 
 ```{r, eval = FALSE}
@@ -400,16 +374,17 @@ round(i2_ml(m0), 2) #both species and phylo = 0% variation
 #              #R=list(Phylogeny = VCV_species),
 #              data = dat)
 # 
-# summary(m0b)
-# 
-# anova(m0b, m0) # reduced model as slightly lower ARC (delta = 4)
+# # summary(m0b)
+# # 
+#  anova(m0b, m0) # reduced model as slightly lower ARC (delta = 4)
 
 
 ```
 
 ```{r}
 orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
- 
+
+#TODO why don't this figure work?? 
 ```
 
 ## Meta-regression {.tabset}
@@ -426,7 +401,7 @@ dat1$PC_type<-as.factor(dat1$PC_type)
 
 VCV1 <- impute_covariance_matrix(vi = dat1$vi, cluster = dat1$Study_ID, r = 0.5)
 
-levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
                     
 
 m1 <- rma.mv(yi = yi, V = VCV1, mod = ~PC_type-1,  
@@ -521,7 +496,6 @@ fig.4
 ```
 
 ### Internal vs external fertilisation
-
 
 
 ```{r}
@@ -648,7 +622,7 @@ fig.5b
 ```
 
 ```{r}
-fig.5c <- (fig.5a + fig.5b)http://127.0.0.1:38297/graphics/plot_zoom_png?width=1200&height=900
+fig.5c <- (fig.5a + fig.5b)
 fig.5c #no differences in traits between internal and external fertilisers
 ```
 
