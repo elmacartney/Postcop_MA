@@ -344,7 +344,7 @@ tree$tip.label<- gsub('_',' ',tree$tip.label)
 
 
 
-# sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
+ # sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
 ```
 
 ```{r, eval = FALSE}
@@ -353,6 +353,10 @@ VCV_species <- vcv(branchlength, corr=TRUE)
 
 
 VCV <- impute_covariance_matrix(vi = dat$vi, cluster = dat$Study_ID, r = 0.5)
+
+# data <- dat %>%
+#   select(Study_ID, Effectsize_ID, Species, yi, vi)
+# complete.cases(data)        
 
 
 m0 <- rma.mv(yi = yi, V = VCV, 
@@ -580,7 +584,7 @@ summary(m4a)
 r2_ml(m4a)
 
 
-fig.5a <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+
+fig.5a <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
   theme(axis.text.y = element_text(angle = 45)) 
 
 fig.5a
@@ -615,7 +619,7 @@ summary(m4b)
 r2_ml(m4b)
 
 
-fig.5b <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+
+fig.5b <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
   theme(axis.text.y = element_text(angle = 45)) 
 
 fig.5b
@@ -623,7 +627,7 @@ fig.5b
 ```
 
 ```{r}
-fig.5c <- (fig.5a + fig.5b)
+fig.5c <- (fig.5a + fig.5b) + plot_annotation(tag_levels = "A")
 fig.5c #no differences in traits between internal and external fertilisers
 ```
 
@@ -655,7 +659,7 @@ fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, x
 fig.6
 ```
 
-7### Competition order 
+### Competition order 
 
 ```{r}
 #TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal
@@ -696,13 +700,12 @@ fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = 
 
 fig.7
 ```
-
-#### P1 and P2 sub-analysis
+#### P1 sub-analysis
 
 ```{r}
-#have grouped p1 and p2 because both are assumed to be loaded raffles. 
+#have grouped p1 and p2 because both are assumed to be loaded raffles. Does this make sense or will different traits potentially be important for offence/defense?
 
-dat5 <- subset(dat, Competition_order  %in% c("P1", "P2"))
+dat5 <- subset(dat, Competition_order  == "P1")
 
 dat5$PC_type<-as.factor(dat5$PC_type)
 
@@ -723,6 +726,74 @@ m6a <- rma.mv(yi = yi, V = VCV5, mod = ~PC_type-1,
 
 summary(m6a)
 r2_ml(m6a)
+
+
+fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+```
+
+#### P2 sub-analysis
+
+```{r}
+#have grouped p1 and p2 because both are assumed to be loaded raffles. Does this make sense or will different traits potentially be important for offence/defense?
+
+dat6 <- subset(dat, Competition_order  == "P2")
+
+dat6$PC_type<-as.factor(dat6$PC_type)
+
+dat6 <- subset(dat6, PC_type %in% c("1", "3", "6", "7"))
+
+levels(dat6$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+
+VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+
+
+
+m6b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6)
+
+summary(m6b)
+r2_ml(m6b)
+
+
+fig.7b <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+```
+
+#### P1 and P2 sub-analysis
+
+```{r}
+#have grouped p1 and p2 because both are assumed to be loaded raffles. Does this make sense or will different traits potentially be important for offence/defense?
+
+dat7 <- subset(dat, Competition_order  %in% c("P1", "P2"))
+
+dat7$PC_type<-as.factor(dat7$PC_type)
+
+VCV7 <- impute_covariance_matrix(vi = dat7$vi, cluster = dat7$Study_ID, r = 0.5)
+
+
+levels(dat7$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6c <- rma.mv(yi = yi, V = VCV7, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat7)
+
+summary(m6c)
+r2_ml(m6c)
 
 
 fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
