@@ -235,25 +235,27 @@ sample_data <- count(dat, Species)
 sample_data <- as.data.frame(sample_data)
 sample_data2 <- mutate(sample_data, tip.label = Species)
 
-tree$tip.label <- strip_ott_ids(tree$tip.label, remove_underscores = TRUE)
+# tree$tip.label <- strip_ott_ids(tree$tip.label, remove_underscores = TRUE)
 
 sample_data3 <- left_join(sample_data2, dat[, c("Species", "Class")],
     by = "Species")
 
 sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
 
-sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
+# sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
 
-sample_data4$Species <- as.factor(sample_data4$Species)
-sample_data4$tip.label <- as.factor(sample_data4$tip.label)
+sample_data4$Species <- as.character(sample_data4$Species)
+sample_data4$tip.label <- as.character(sample_data4$tip.label)
 sample_data4$Class <- as.factor(sample_data4$Class)
 
 
 #TODO Can't get this figure to work
 
-tree2 <- ggtree(tree)
-tree3 <- tree2 %<+% sample_data4 + geom_tippoint(aes(color = Class))+ scale_colour_manual(values = c("red", "green", "blue", "black", "yellow", "orange", "darkgreen"))
+tree2 <- ggtree(tree, layout = "circular") %<+% sample_data4
+  
+cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
 
+tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color_manual(values = cols)  
 
 ```
 
@@ -796,7 +798,7 @@ summary(m6c)
 r2_ml(m6c)
 
 
-fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
+fig.7c <- orchard_plot(m6c, mod = "PC_type", group = "Study_ID", data = dat7, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
 #TODO need to remove normality, and velocity
@@ -806,38 +808,40 @@ fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xl
 
 ```{r}
 
-dat6 <- subset(dat, Competition_order == "Random mixing")
+dat8 <- subset(dat, Competition_order == "Random mixing")
 
-dat6$PC_type<-as.factor(dat6$PC_type)
+dat8$PC_type<-as.factor(dat8$PC_type)
 
-VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
-
-
-levels(dat6$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+VCV8 <- impute_covariance_matrix(vi = dat8$vi, cluster = dat8$Study_ID, r = 0.5)
 
 
-m6b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,  
+levels(dat8$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6d <- rma.mv(yi = yi, V = VCV8, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
              test = "t",
-             data = dat6)
+             data = dat8)
 
-summary(m6b)
-r2_ml(m6b)
+summary(m6d)
+r2_ml(m6d)
 
 
-fig.7b <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+fig.7d <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
 ```
 
 
 ```{r}
-fig.7c <- (fig.7a + fig.7b)
-fig.7c 
+fig.7e <- (fig.7a + fig.7b + fig.7d)
+fig.7e 
+
+fig.7f <- fig.7c + fig.7d
 
 #TODO could instead do sub analyses within traits
 ```
