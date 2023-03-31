@@ -257,6 +257,8 @@ cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "
 
 tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color_manual(values = cols)  
 
+#TODO also want to add counts of the number of studies on each species
+
 ```
 
 
@@ -307,7 +309,6 @@ dat$Phylogeny <- gsub('_',' ',dat$Species)
 tree$tip.label<- gsub('_',' ',tree$tip.label)
 
 
-
  # sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
 ```
 
@@ -351,6 +352,19 @@ round(i2_ml(m0), 2) #both species and phylo = 0% variation
 ### Fig. 3
 ```{r}
 Fig3 <- orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
+# +  
+#   geom_errorbarh(aes(xmin = lowerPR, xmax = upperPR), height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5)+ 
+#   geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), height = 0.05, show.legend = FALSE, size = 2)+ 
+#   geom_point(aes(fill = name),  size = 5, shape = 21)+ 
+#   scale_colour_manual(values = "darkorange")+ 
+#   scale_fill_manual(values="darkorange")+ 
+#   scale_size_continuous(range = c(1, 7))+ 
+#   theme(panel.border = element_rect(colour = "black", fill=NA, size=1.3), 
+#         text = element_text(size = 24), 
+#         legend.title = element_text(size = 15),
+#         legend.text = element_text(size = 13)) 
+
+#TODO previous code to modify oarchard plot no longer works
 
 Fig3
 ```
