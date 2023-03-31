@@ -262,49 +262,21 @@ tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color
 
 ## Fig. 2
 
-### Trait and variation cause
-
 ```{r}
-freq2 <- as.data.frame(table(dat$PC_type, dat$PC_variation_cause)) %>%
-  rename("Trait" = Var1, "Variation_cause" = Var2)
-# is_alluvia_form(as.data.frame(freq), axes = 1:2, silent = TRUE)
+#TODO why is this code adding all these random small connections. Need to clean up
 
-levels(freq2$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$Competition_order, dat$PC_type, dat$PC_variation_cause)) %>%
+  rename("Fertilisation_mode" = Var1, "Mating_order" = Var2, "Trait" = Var3, "Variation_cause" = Var4)
 
-levels(freq2$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "selection" = "5", "other/unclear" = "6")
+levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
 
-p2 <- ggplot(data = freq2, aes(axis1 = Variation_cause, axis2 = Trait, y = Freq)) +
-    geom_alluvium(aes(fill = Variation_cause)) + geom_flow() + geom_stratum(aes(fill = Variation_cause)) +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
-    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Variation cause", "Postcopulatory trait"), expand = c(0.15, 0.05), position = "top") 
+levels(freq1$Mating_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3", "P1 and P2 (mating order controlled for)" = "4", "other/unclear" = "5")
 
+levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
-```
+levels(freq1$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "artificial selcetion" = "5", "unclear/other" = "6")
 
-
-### Fertilisation mode, Fertilisation method, mating order
-
-```{r}
-freq3 <- as.data.frame(table(dat$Fertilisation_mode, dat$Fertilisation_methods, dat$Competition_order)) %>%
-  rename("Fertilisation_mode" = Var1, "Fertilisation_method" = Var2, "Mating_order" = Var3)
-
-levels(freq3$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
-
-levels(freq3$Fertilisation_method) <- list("natural" = "1", "artificial fertilisation" = "2", "other/unclear" = "3")
-
-levels(freq3$Mating_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3", "P1 and P2 (mating order controlled for)" = "4", "other/unclear" = "5")
-
-p3 <- ggplot(data = freq3, aes(axis1 = Fertilisation_mode, axis2 = Fertilisation_method, axis3 = Mating_order, y = Freq)) +
+Fig2a <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Mating_order, axis3 = Trait, axis4 = Variation_cause, y = Freq)) +
     geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
     geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
     geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
@@ -317,19 +289,9 @@ p3 <- ggplot(data = freq3, aes(axis1 = Fertilisation_mode, axis2 = Fertilisation
     geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
 theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
     vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Fertilisation method", "Mating order"), expand = c(0.15, 0.05), position = "top") 
-
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Mating order", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top") 
 ```
 
-```{r, warning= FALSE}
-
-Fig2 <- (p2 + p3) + plot_annotation(tag_levels = "A")
-
-Fig2
-
-#TODO need to clean up this figure
-
-```
 
 # Analysis {.tabset}
 
@@ -386,11 +348,11 @@ round(i2_ml(m0), 2) #both species and phylo = 0% variation
 
 
 ```
-
+### Fig. 3
 ```{r}
-orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
+Fig3 <- orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
 
-#TODO why don't this figure work?? 
+Fig3
 ```
 
 ## Meta-regression {.tabset}
