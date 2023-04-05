@@ -168,7 +168,6 @@ write.tree(mytree, file = "species_tree.tre")
 
 df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
 
-
 zr <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2)
 
 #adding back to dataframe 
