@@ -370,7 +370,7 @@ Fig3
 
 ### Traits
 
-```{r}
+```{r, message = FALSE}
 
 #removing trait 2 (testes size)
 
@@ -398,22 +398,24 @@ summary(m1)
 r2_ml(m1)
 
 
-fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "zr", alpha=0.4) +
-  theme(axis.text.y = element_text(angle = 45))
+fig.4a <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "zr", alpha=0.4) +
+  scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
 
-fig.2
+# fig.4a
 
 ```
 
 ### Trait variation cause
 
-```{r}
+```{r, message = FALSE}
 
 dat$PC_variation_cause<-as.factor(dat$PC_variation_cause)
 
-levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "experimental selection" = "5", "other" = "6")
-
-#TODO should we remove 'other'?
+levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "experimental selection" = "5", "unclear/other" = "6")
 
 
 m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause-1,  
@@ -430,17 +432,20 @@ summary(m2)
 r2_ml(m2)
 
 
-fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
-  theme(axis.text.y = element_text(angle = 45))
-
-fig.3
+fig.4b <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("Other", "Experimental selection", "Direct manipulation", "Age", "Environmental plasticity", "Natural")),
+              annotations = "*")
 
 ```
 
 ### Internal vs external fertilisation
 
 
-```{r}
+```{r, message = FALSE}
 
 dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
 
@@ -460,10 +465,14 @@ summary(m4)
 r2_ml(m4)
 
 
-fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
-  theme(axis.text.y = element_text(angle = 45)) 
+fig.4c <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
+  scale_colour_manual(values = c("grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("Internal", "External")),
+              annotations = "*")
 
-fig.5 #no difference between fertilisation mode but lets looks at subanalysis. Perhaps different traits are doing different things.
+
 
 ```
 
@@ -522,9 +531,11 @@ r2_ml(m4a)
 
 
 fig.5a <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
-  theme(axis.text.y = element_text(angle = 45)) 
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
 
-fig.5a
+# fig.5a
 
 ```
 
@@ -557,48 +568,44 @@ r2_ml(m4b)
 
 
 fig.5b <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
-  theme(axis.text.y = element_text(angle = 45)) 
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
 
-fig.5b
+# fig.5b
 
 ```
 
 ```{r}
-fig.5c <- (fig.5a + fig.5b) + plot_annotation(tag_levels = "A")
-fig.5c #no differences in traits between internal and external fertilisers
-```
-
 ### Precedence 
-
-```{r}
 #TODO need to think about this category some more
 #TODO could also do subanalysis
 #TODO Not sure how to deal with this category. Might be too hard
 
-dat$Precendence<-as.factor(dat$Precendence)
-
-m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  
-             random = list(~1|Study_ID,
-                          ~1|Effectsize_ID,
-                          ~1|Species,
-                         ~1|Phylogeny),
-             R=list(Phylogeny = VCV_species),
-             test = "t",
-             data = dat)
-
-summary(m5)
-
-r2_ml(m5)
-
-
-fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
-
-fig.6
+# dat$Precendence<-as.factor(dat$Precendence)
+# 
+# m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  
+#              random = list(~1|Study_ID,
+#                           ~1|Effectsize_ID,
+#                           ~1|Species,
+#                          ~1|Phylogeny),
+#              R=list(Phylogeny = VCV_species),
+#              test = "t",
+#              data = dat)
+# 
+# summary(m5)
+# 
+# r2_ml(m5)
+# 
+# 
+# fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+# 
+# fig.6
 ```
 
 ### Competition order 
 
-```{r}
+```{r,message = FALSE}
 #TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal
 
 dat$Competition_order<-as.factor(dat$Competition_order)
@@ -632,10 +639,14 @@ m6b <- rma.mv(yi = yi, V = vi, mod = ~Competition_order,
 summary(m6b)
 
 
-fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
-  theme(axis.text.y = element_text(angle = 45)) 
+fig.4d <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  scale_colour_manual(values = c("grey34","grey34", "grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34", "grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("P1", "P2", "Random mixing", "Mating order controlled for")),annotations = "*")
 
-fig.7
+fig.4d
 ```
 #### P1 sub-analysis
 
@@ -647,7 +658,6 @@ dat5 <- subset(dat, Competition_order  == "P1")
 dat5$PC_type<-as.factor(dat5$PC_type)
 
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
-
 
 levels(dat5$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
@@ -665,7 +675,7 @@ summary(m6a)
 r2_ml(m6a)
 
 
-fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
+fig.S3a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
 ```
@@ -687,7 +697,7 @@ VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
 
 
 
-m6b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,  
+S3b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -696,14 +706,15 @@ m6b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,
              test = "t",
              data = dat6)
 
-summary(m6b)
-r2_ml(m6b)
+summary(S3b)
+r2_ml(S3b)
 
 
-fig.7b <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+fig.S3b <- orchard_plot(S3b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
 ```
+
 
 #### P1 and P2 sub-analysis
 
@@ -714,10 +725,11 @@ dat7 <- subset(dat, Competition_order  %in% c("P1", "P2"))
 
 dat7$PC_type<-as.factor(dat7$PC_type)
 
+dat7 <- subset(dat7, PC_type %in% c("1", "3", "6", "7"))
+
 VCV7 <- impute_covariance_matrix(vi = dat7$vi, cluster = dat7$Study_ID, r = 0.5)
 
-
-levels(dat7$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+levels(dat7$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
 
 
 m6c <- rma.mv(yi = yi, V = VCV7, mod = ~PC_type-1,  
@@ -733,10 +745,9 @@ summary(m6c)
 r2_ml(m6c)
 
 
-fig.7c <- orchard_plot(m6c, mod = "PC_type", group = "Study_ID", data = dat7, xlab = "zr", alpha=0.4)+
+fig.6a<- orchard_plot(m6c, mod = "PC_type", group = "Study_ID", data = dat7, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
-#TODO need to remove normality, and velocity
 ```
 
 #### Random mixing sub-analysis
@@ -749,11 +760,10 @@ dat8$PC_type<-as.factor(dat8$PC_type)
 
 VCV8 <- impute_covariance_matrix(vi = dat8$vi, cluster = dat8$Study_ID, r = 0.5)
 
-
 levels(dat8$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
 
-m6d <- rma.mv(yi = yi, V = VCV8, mod = ~PC_type-1,  
+m6b <- rma.mv(yi = yi, V = VCV8, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -762,23 +772,43 @@ m6d <- rma.mv(yi = yi, V = VCV8, mod = ~PC_type-1,
              test = "t",
              data = dat8)
 
-summary(m6d)
-r2_ml(m6d)
+summary(m6b)
+r2_ml(m6b)
 
+#TODO why is this figure not plotting normality or velocity??
 
-fig.7d <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+fig.6b <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat8, xlab = "zr", alpha=0.4)+
   theme(axis.text.y = element_text(angle = 45)) 
 
 ```
 
-
+### Fig. 4
 ```{r}
-fig.7e <- (fig.7a + fig.7b + fig.7d)
-fig.7e 
-
-fig.7f <- fig.7c + fig.7d
-
-#TODO could instead do sub analyses within traits
+fig.4 <- ((fig.4a + fig.4b)/(fig.4c + fig.4d)) + plot_annotation(tag_levels = 'A')
+fig.4
 ```
 
+### Fig. 5
+
+```{r}
+fig.5 <- (fig.5a + fig.5b) + plot_annotation(tag_levels = 'A')
+fig.5 #no differences in traits between internal and external fertilisers
+```
+
+### Fig. 6
+
+```{r}
+fig.6 <- (fig.6a + fig.6b)  + plot_annotation(tag_levels = 'A')
+fig.6 
+
+```
+
+### Fig. S3
+
+```{r}
+fig.S3 <- (fig.S3a + fig.S3b)  + plot_annotation(tag_levels = 'A')
+
+fig.S3
+
+```
 ## Publication bias and sensitvity analysis
