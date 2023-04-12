@@ -599,7 +599,7 @@ dat$PC_variation_cause2<-as.factor(dat$PC_variation_cause2)
 levels(dat$PC_variation_cause2) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic variation" = "5", "unclear/other" = "6")
 
 
-m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause-1,  
+m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause2-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -616,7 +616,7 @@ r2_ml(m2)
 #### Fig. 5
 
 ```{r,}
-fig.5 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+fig.5 <- orchard_plot(m2, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
   theme(axis.text.y = element_text(angle = 45)) +
   scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
