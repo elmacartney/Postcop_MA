@@ -32,7 +32,10 @@ rm(list = ls())
 
 #TODO still can't get ggtree to work with the most up to date version of R and Rstudio. It will occasionally run then stop running again. 
 
-pacman::p_load(tidyverse, 
+pacman::p_load(dplyr,
+               tidyr,
+               # tidyverse,
+               readr,
                here, 
                metafor, 
                clubSandwich, 
@@ -42,7 +45,7 @@ pacman::p_load(tidyverse,
                phytools,
                ggplot2,
                ggsignif,
-               ggtree,
+               # ggtree,
                ggthemr,
                ggtreeExtra,
                ggalluvial,
@@ -53,9 +56,9 @@ pacman::p_load(tidyverse,
 ## Loading data and functions
 ```{r, message = FALSE}
 #Code for loading raw data
-# dat <- read_csv(here("Data", "Data_raw_crosschecked.csv")) #raw data was used for data processing below
+# dat <- read_csv(here("Data", "Data_raw_crosschecked_variation recoded.csv")) #raw data was used for data processing below
 
-dat <- read_csv(here("Data", "processed_data.csv"))
+dat <- read_csv(here("Data", "processed_data2.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
 tree <- read.tree(file = "species_tree.tre") #loading phylogenetic tree
 ```
@@ -183,7 +186,9 @@ zr <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2)
 
 df5 <- bind_cols(df4, zr)
 
-write.csv(df5, "processed_data.csv")
+write.csv(df5, "processed_data2.csv")
+
+#manually having to calculate vi for effect sizes 39, 43 and 44 as for some reason the function isn't calculating it for these ones
 
 ```
 
@@ -233,7 +238,7 @@ dat %>%
 # Cause of PC variation 
 
 dat %>%
-  group_by(PC_variation_cause) %>%
+  group_by(PC_variation_cause2) %>%
   summarise(n = n_distinct(Effectsize_ID))
 
 ```
@@ -277,14 +282,14 @@ tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color
 ## Fig. 2
 
 ```{r,}
-freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type, dat$PC_variation_cause)) %>%
+freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type, dat$PC_variation_cause2)) %>%
   rename("Fertilisation_mode" = Var1, "Trait" = Var2, "Variation_cause" = Var3)
 
 levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
 
 levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
-levels(freq1$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "artificial selcetion" = "5", "unclear/other" = "6")
+levels(freq1$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic differences" = "5", "unclear/other" = "6")
 
 Fig2 <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Trait, axis3 = Variation_cause, y = Freq)) +
     geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
@@ -589,9 +594,9 @@ fig.4
 
 ```{r, message = FALSE}
 
-dat$PC_variation_cause<-as.factor(dat$PC_variation_cause)
+dat$PC_variation_cause2<-as.factor(dat$PC_variation_cause2)
 
-levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "experimental selection" = "5", "unclear/other" = "6")
+levels(dat$PC_variation_cause2) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic variation" = "5", "unclear/other" = "6")
 
 
 m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause-1,  
