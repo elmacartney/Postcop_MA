@@ -1,6 +1,6 @@
 # functions
 
-# TODO cehck N
+# TODO check N
 
 
 ##########
