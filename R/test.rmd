@@ -1,0 +1,17 @@
+---
+title: "Post-cop trait on paternity"
+author: "Erin Macartney"
+date: '2023-01-10'
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE,
+cache = TRUE, 
+tidy = TRUE, 
+echo = TRUE
+)
+```
+

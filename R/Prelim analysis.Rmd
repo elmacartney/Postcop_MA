@@ -58,9 +58,10 @@ pacman::p_load(dplyr,
 #Code for loading raw data
 # dat <- read_csv(here("Data", "Data_raw_crosschecked_variation recoded.csv")) #raw data was used for data processing below
 
-dat <- read_csv(here("Data", "processed_data2.csv"))
+#dat <- read_csv(here("Data", "processed_data2.csv"))
+dat <- read_csv(here("Data", "processed_data3.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
-tree <- read.tree(file = "species_tree.tre") #loading phylogenetic tree
+tree <- read.tree(here("R", "species_tree.tre")) #loading phylogenetic tree
 ```
 
 ## Calculating r
@@ -96,7 +97,11 @@ effect_size_F <- with(dat, mapply(F_vals_b, F, N, reverse = FALSE))
 effect_size_p <- with(dat, mapply(p_vals_b, p, N, reverse = FALSE))
 
 
-dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, "effect_size_est" =  effect_size_est, "effect_size_t" =  effect_size_t, "effect_size_F" = effect_size_F, "effect_size_p" = effect_size_p)
+dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, 
+                      "effect_size_est" =  effect_size_est, 
+                      "effect_size_t" =  effect_size_t, 
+                      "effect_size_F" = effect_size_F, 
+                      "effect_size_p" = effect_size_p)
 
 #removing unclear F stat direction
 df2 <- subset(dat2, Effectsize_ID !='3')
@@ -104,7 +109,10 @@ df2 <- subset(dat2, Effectsize_ID !='3')
 #combining all r into one column
 
 df3 <- df2 %>%
-    select("Effectsize_ID","Corr_r", "effect_size_group2", "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p")%>% pivot_longer(cols = -Effectsize_ID, values_to = "effect_size", names_to = "summary_statistic") %>% drop_na() 
+    select("Effectsize_ID","Corr_r", "effect_size_group2", 
+    "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p") %>% 
+    pivot_longer(cols = -Effectsize_ID, values_to = "effect_size", names_to = "summary_statistic") %>% 
+    drop_na() 
 
 #merging back with df2
 
@@ -177,16 +185,26 @@ write.tree(mytree, file = "species_tree.tre")
 
 ```{r, eval = FALSE}
 
+# test
+#df4 <- read_csv(here("Data", "processed_data.csv"))
 
-df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
+# TODO - this was wrong - should be N/2 for dependent samples
+#df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
+df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N/2, df4$N)
+# TODO - 38th obs has N = 2.5 replacing with 3.5 (the smallest N in the dataset) - Erin 
+#  the function did say the reason was that N was too small
+df4$N2 <- ifelse(df4$N2 == 2.5, 3.5, df4$N2)
 
-zr <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2)
+df5 <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2, data = df4)
 
 #adding back to dataframe 
+#df5 <- bind_cols(df4, zr)
 
-df5 <- bind_cols(df4, zr)
+#write.csv(df5, "processed_data2.csv")
+# new data with zr and variance
+write.csv(df5, "processed_data3.csv")
 
-write.csv(df5, "processed_data2.csv")
+```
 
 #manually having to calculate vi for effect sizes 39, 43 and 44 as for some reason the function isn't calculating it for these ones
 
@@ -395,17 +413,27 @@ round(i2_ml(m0), 2) #both species and phylo = 0% variation
 
 ### Fig. 3
 ```{r}
-Fig3 <- orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat)+
+
+# TODO - this is how you get Correlation rather than Zr
+# Also a few other things changed
+res0 <- mod_results(m0, mod = "1", data = dat, group = "Study_ID")
+# not quite sure why these do not work
+#res0$mod_table$name <- "Overall"
+#res0$data$moderator <- rep("Overall", each = nrow(res0$data))
+Fig3 <- orchard_plot(res0, mod = "1", xlab = "Correlation", 
+                    group = "Study_ID", alpha=0.4, transfm = "tanh") +
   scale_colour_manual(values = c("grey34")) +
   scale_fill_manual(values=c("grey34")) 
 
-#TODO why does the code I previously used for orchard plots not work??
-
-#   geom_errorbarh(aes(xmin = lowerPR, xmax = upperPR), height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5)+
-#   geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), height = 0.05, show.legend = FALSE, size = 2)+
-#   geom_point(aes(fill = name), shape = 21)+
-#   scale_size_continuous(range = c(1, 7))+
-#   theme(panel.border = element_rect(colour = "black", fill=NA))
+# #TODO previous code to modify oarchard plot no longer works
+  # chaning y name to "Overall effect size"
+  # geom_errorbarh(data = res0, aes(xmin = lowerPR, xmax = upperPR), 
+  #     height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5) +
+  # geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), 
+  #     height = 0.05, show.legend = FALSE, size = 2)　+
+  # geom_point(aes(fill = name), shape = 21)+
+  # scale_size_continuous(range = c(1, 7))+
+  # theme(panel.border = element_rect(colour = "black", fill=NA))
 
 # #TODO previous code to modify oarchard plot no longer works
 
@@ -799,3 +827,61 @@ fig.5
 ```
 
 ## Publication bias and sensitvity analysis
+
+
+### Funnel plots
+```{r}
+
+# funnel plot
+funnel(m0)
+
+# TODO - we want to do funnel plot from the best model
+
+```
+
+### Small-study and decline effects 
+
+```{r}
+
+# small study effect
+dat$sei <- sqrt(dat$vi)
+egger <- rma.mv(yi = yi, V = VCV, 
+             mod = sei,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat)
+
+# no statistical evidence for small-study effect
+summary(egger)
+
+#TODO - shinichi - why this does not work
+bubble_plot(egger, mod = "sei", group = "Study_ID", data = dat)
+
+# decline effect
+dat$cYear <- scale(dat$Year_published, center = TRUE, scale = FALSE)
+decline <- rma.mv(yi = yi, V = VCV, 
+             mod = cYear,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat)
+
+# no statistical evidence for decline effect
+summary(decline)
+
+# TODO this does not work - will get this working 
+mod_results(decline, mod = "cYear", group = "Study_ID", data = dat)
+bubble_plot(decline, mod = "cYear", group = "Study_ID", data = dat)
+
+```
+
+### 
+
+```{r}
+
+```
