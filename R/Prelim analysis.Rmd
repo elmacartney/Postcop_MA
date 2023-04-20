@@ -58,7 +58,7 @@ pacman::p_load(dplyr,
 #Code for loading raw data
 # dat <- read_csv(here("Data", "Data_raw_crosschecked_variation recoded.csv")) #raw data was used for data processing below
 
-#dat <- read_csv(here("Data", "processed_data2.csv"))
+# dat <- read_csv(here("Data", "processed_data2.csv"))
 dat <- read_csv(here("Data", "processed_data3.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
 tree <- read.tree(here("R", "species_tree.tre")) #loading phylogenetic tree
@@ -206,17 +206,14 @@ write.csv(df5, "processed_data3.csv")
 
 ```
 
-#manually having to calculate vi for effect sizes 39, 43 and 44 as for some reason the function isn't calculating it for these ones
-
-```
-
+manually having to calculate vi for effect sizes 39, 43 and 44 as for some reason the function isn't calculating it for these ones
 
 # Data exploration {.tabset}
 
 ## Sample sizes
 
 ```{r, eval = FALSE}
-#number of effect sizes
+# number of effect sizes
 
 length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
 #why does data go down to 106 then?
@@ -420,7 +417,7 @@ res0 <- mod_results(m0, mod = "1", data = dat, group = "Study_ID")
 # not quite sure why these do not work
 #res0$mod_table$name <- "Overall"
 #res0$data$moderator <- rep("Overall", each = nrow(res0$data))
-Fig3 <- orchard_plot(res0, mod = "1", xlab = "Correlation", 
+Fig3 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
                     group = "Study_ID", alpha=0.4, transfm = "tanh") +
   scale_colour_manual(values = c("grey34")) +
   scale_fill_manual(values=c("grey34")) 
@@ -472,8 +469,9 @@ summary(m1)
 r2_ml(m1)
 
 
-fig.4a <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "zr", alpha=0.4) +
+fig.4a <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory trait as moderator in global model') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
 
@@ -504,10 +502,11 @@ summary(m4)
 r2_ml(m4)
 
 
-fig.4b <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
+fig.4b <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Fertilisation mode as a moderator in global model') +
     geom_signif(comparisons = list(c("Internal", "External")),
               annotations = "*")
 
@@ -567,12 +566,11 @@ summary(m4a)
 r2_ml(m4a)
 
 
-fig.4c <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
+fig.4c <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,2) +
   theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory traits within internal fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
-
-
 ```
 
 #### External sub-analysis
@@ -603,12 +601,14 @@ summary(m4b)
 r2_ml(m4b)
 
 
-fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
+fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,2) +
   theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory traits within external fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
 
 ```
+
 #### Fig. 4
 
 ```{r,}
