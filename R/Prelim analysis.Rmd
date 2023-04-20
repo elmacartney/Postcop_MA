@@ -471,7 +471,7 @@ r2_ml(m1)
 
 fig.4a <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
-  ggtitle('Post-copulatory trait as moderator in global model') +
+  ggtitle('Post-copulatory trait as a moderator in global model') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
 
@@ -566,7 +566,7 @@ summary(m4a)
 r2_ml(m4a)
 
 
-fig.4c <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,2) +
+fig.4c <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory traits within internal fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -601,7 +601,7 @@ summary(m4b)
 r2_ml(m4b)
 
 
-fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,2) +
+fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory traits within external fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -609,7 +609,7 @@ fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xl
 
 ```
 
-#### Fig. 4
+#### Fig. 4http://127.0.0.1:29529/graphics/plot_zoom_png?width=1116&height=822
 
 ```{r,}
 
@@ -644,7 +644,7 @@ r2_ml(m2)
 #### Fig. 5
 
 ```{r,}
-fig.5 <- orchard_plot(m2, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+fig.5 <- orchard_plot(m2, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
