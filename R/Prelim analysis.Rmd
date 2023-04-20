@@ -609,8 +609,7 @@ fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xl
 
 ```
 
-#### Fig. 4http://127.0.0.1:29529/graphics/plot_zoom_png?width=1116&height=822
-
+#### Fig. 4
 ```{r,}
 
 fig.4 <- ((fig.4a + fig.4b)/(fig.4c + fig.4d)) + plot_annotation(tag_levels = 'A')
