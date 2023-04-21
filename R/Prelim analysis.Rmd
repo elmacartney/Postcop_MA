@@ -32,6 +32,8 @@ rm(list = ls())
 
 #TODO still can't get ggtree to work with the most up to date version of R and Rstudio. It will occasionally run then stop running again. 
 
+eval(metafor:::.MuMIn)
+
 pacman::p_load(dplyr,
                tidyr,
                # tidyverse,
@@ -45,12 +47,13 @@ pacman::p_load(dplyr,
                phytools,
                ggplot2,
                ggsignif,
-               # ggtree,
+               ggtree,
                ggthemr,
                ggtreeExtra,
                ggalluvial,
                patchwork,
-               clubSandwich)
+               clubSandwich,
+               MuMIn)
 ```
 
 ## Loading data and functions
@@ -279,9 +282,6 @@ sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
 sample_data4$Species <- as.character(sample_data4$Species)
 sample_data4$tip.label <- as.character(sample_data4$tip.label)
 sample_data4$Class <- as.factor(sample_data4$Class)
-
-
-#TODO Can't get this figure to work
 
 tree2 <- ggtree(tree, layout = "circular") %<+% sample_data4
   
@@ -827,14 +827,40 @@ fig.5
 
 ## Publication bias and sensitvity analysis
 
+### Multi-moderator model
+```{r}
+
+dat_fm <- subset(dat, PC_type !=2)
+
+VCV_fm <- impute_covariance_matrix(vi = dat_fm$vi, cluster = dat_fm$Study_ID, r = 0.5)
+
+mod_fm <- rma.mv(yi = yi, V = VCV_fm, mod = ~PC_type-1 + Fertilisation_mode + PC_variation_cause2,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_fm)
+# 
+# summary(mod_fm)
+# 
+# r2_ml(mod_fm)
+
+res_fm <- dredge(mod_fm, trace = 2)
+
+res_fm2 <- subset(res_fm, delta <= 4, recalc.weights = FALSE)
+sw(res_fm2)
+```
+
 
 ### Funnel plots
 ```{r}
 
 # funnel plot
-funnel(m0)
+funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror")
 
-# TODO - we want to do funnel plot from the best model
+#I've added the full model - it looks a bit strange
 
 ```
 
@@ -879,8 +905,52 @@ bubble_plot(decline, mod = "cYear", group = "Study_ID", data = dat)
 
 ```
 
-### 
+### Leave-one-group-out
 
 ```{r}
+
+dat$Study_ID <- as.factor(dat$Study_ID)
+
+LeaveOneOut_effectsize <- list()
+for (i in 1:length(levels(dat$Study_ID))) {
+    d <- dat %>%
+        filter(Study_ID != levels(d$Study_ID)[i])
+
+    VCV_Sb <- impute_covariance_matrix(vi = d$yi, cluster = d$Study_ID, r = 0.5)
+
+    LeaveOneOut_effectsize[[i]] <- rma.mv(yi = yi, V = VCV_Sb, random = list(~1 |
+        Study_ID, ~1 | Effectsize_ID, ~1 | Species), method = "REML", data = data[data$Study_ID !=
+        levels(data$Study_ID)[i], ])
+}
+
+# writing function for extracting est, ci.lb, and ci.ub from all models
+est.func <- function(m0) {
+    df <- data.frame(est = m0$yi, lower = m0$ci.lb, upper = m0$ci.ub)
+    return(df)
+}
+
+# using dplyr to form data frame
+MA_CVR <- lapply(LeaveOneOut_effectsize, function(x) est.func(x)) %>%
+    bind_rows %>%
+    mutate(left_out = levels(dat$Study_ID))
+
+```
+
+```{r}
+
+# telling ggplot to stop reordering factors
+MA_CVR$left_out <- as.factor(MA_CVR$left_out)
+MA_CVR$left_out <- factor(MA_CVR$left_out, levels = MA_CVR$left_out)
+
+# plotting
+leaveoneout <- ggplot(MA_CVR) + geom_hline(yintercept = 0, lty = 2, lwd = 1) +
+    geom_hline(yintercept = m0$ci.lb, lty = 3, lwd = 0.75, colour = "black") +
+    geom_hline(yintercept = m0$b, lty = 1, lwd = 0.75, colour = "black") + geom_hline(yintercept = m0$ci.ub,
+    lty = 3, lwd = 0.75, colour = "black") + geom_pointrange(aes(x = left_out, y = est,
+    ymin = lower, ymax = upper)) + xlab("Study left out") + ylab("lnRR, 95% CI") +
+    coord_flip() + theme(panel.grid.minor = element_blank()) + theme_bw() + theme(panel.grid.major = element_blank()) +
+    theme(panel.grid.minor.x = element_blank()) + theme(axis.text.y = element_text(size = 6))
+
+leaveoneout
 
 ```
