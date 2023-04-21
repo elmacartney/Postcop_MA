@@ -909,18 +909,23 @@ bubble_plot(decline, mod = "cYear", group = "Study_ID", data = dat)
 
 ```{r}
 
+dat <- dat %>%
+    mutate(leave_out = paste(First_author, Year_published, sep = "_"))
+dat$leave_out <- as.factor(dat$leave_out)
+dat$Year_published <- as.integer(dat$Year_published)
+
 dat$Study_ID <- as.factor(dat$Study_ID)
 
 LeaveOneOut_effectsize <- list()
-for (i in 1:length(levels(dat$Study_ID))) {
+for (i in 1:length(levels(dat$leave_out))) {
     d <- dat %>%
-        filter(Study_ID != levels(d$Study_ID)[i])
+        filter(leave_out != levels(dat$leave_out)[i])
 
-    VCV_Sb <- impute_covariance_matrix(vi = d$yi, cluster = d$Study_ID, r = 0.5)
+    VCV_Sb <- impute_covariance_matrix(vi = d$vi, cluster = d$Study_ID, r = 0.5)
 
     LeaveOneOut_effectsize[[i]] <- rma.mv(yi = yi, V = VCV_Sb, random = list(~1 |
-        Study_ID, ~1 | Effectsize_ID, ~1 | Species), method = "REML", data = data[data$Study_ID !=
-        levels(data$Study_ID)[i], ])
+        Study_ID, ~1 | Effectsize_ID, ~1| Species), method = "REML", data = dat[dat$leave_out !=
+        levels(dat$leave_out)[i], ])
 }
 
 # writing function for extracting est, ci.lb, and ci.ub from all models
@@ -932,7 +937,9 @@ est.func <- function(m0) {
 # using dplyr to form data frame
 MA_CVR <- lapply(LeaveOneOut_effectsize, function(x) est.func(x)) %>%
     bind_rows %>%
-    mutate(left_out = levels(dat$Study_ID))
+    mutate(left_out = levels(dat$leave_out))
+
+#TODO why isn't this working??
 
 ```
 
