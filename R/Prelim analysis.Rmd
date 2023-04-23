@@ -44,6 +44,7 @@ pacman::p_load(dplyr,
                orchaRd,
                rotl,
                ape,
+               tibble,
                phytools,
                ggplot2,
                ggsignif,
@@ -264,7 +265,6 @@ dat %>%
 ## Fig. 1
 
 ```{r}
-#TODO still can't get this figure to work, and I have the most up to date version of R and rstudio
 
 sample_data <- count(dat, Species)
 sample_data <- as.data.frame(sample_data)
@@ -283,12 +283,39 @@ sample_data4$Species <- as.character(sample_data4$Species)
 sample_data4$tip.label <- as.character(sample_data4$tip.label)
 sample_data4$Class <- as.factor(sample_data4$Class)
 
-tree2 <- ggtree(tree, layout = "circular") %<+% sample_data4
-  
-cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
+#prepare effect sizes counts data
+sample_data4$Species <- sub('Xiphophorus_helleri','Xiphophorus_hellerii', sample_data4$Species) #fix typo
+data_species_count_K <- sample_data4$n
+names(data_species_count_K) <- sample_data4$Species #add row names
 
-tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color_manual(values = cols)  
+#prepare papers counts data
+papers_counts <- dat %>% group_by(Species) %>% summarize(distinct_papers = n_distinct(Paper_ID)) %>% deframe() #using library(tibble)
+names(papers_counts) <- sub('Xiphophorus_helleri','Xiphophorus_hellerii', names(papers_counts)) #fix typo
+data_papers_count_N_tree <- papers_counts[match(tree$tip.label, names(papers_counts))]  # reorder counts to match the order of tips 
 
+#prepare Class data
+sample_data4$Class <- as.factor(sample_data4$Class)
+#levels(sample_data4$Class)
+
+#set colors (by Class) for the plot
+color_bgroup <- c("#00A1D5", "#999933", "#A20056", "#E9AF1D", "#E18727", "#661100", "#117733")[sample_data4$Class] #assign colors to Class - based on levels(data_species_bgroup) #biological groups - https://r-charts.com/color-palettes/
+names(color_bgroup) <- sample_data4$Species #make it a named vector
+color_bgroup_tip <- color_bgroup[match(tree$tip.label, names(color_bgroup))]  # reorder colors to match the order of tips on the tree
+data_species_count_K_tree <- data_species_count_K[match(tree$tip.label, names(data_species_count_K))]  # reorder counts to match the order of tips on the tree
+
+#plot locally using base graphics
+plot(tree, x.lim = 100, y.lim = length(sample_data4$Species)+2, cex = 1, tip.color = color_bgroup_tip, label.offset = 1, edge.color = "grey", font = 3)
+phydataplot(data_species_count_K, tree, col = color_bgroup_tip, offset = 40, scaling = 2, border = "white", lwd = 3, legend = "side") #add counts of effect sizes bars 
+text(90, length(sample_data4$Species)+2, "effect sizes (papers)", font=3) #add counts label
+text(95, 1:length(data_species_count_K_tree), data_species_count_K_tree) #add counts of effect sizes numbers 
+text(100, 1:length(data_papers_count_N_tree), paste("(", data_papers_count_N_tree, ")")) #add counts of effect sizes numbers 
+
+#it is easy to add species silluettes (e.g. one per class) using library(rphylopic)
+
+#OLD CODE (ggtree)
+# tree2 <- ggtree(tree, layout = "circular") %<+% sample_data4
+# cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
+# tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color_manual(values = cols)  
 #TODO also want to add counts of the number of studies on each species
 
 ```
