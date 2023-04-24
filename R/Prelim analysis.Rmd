@@ -226,6 +226,10 @@ length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size fl
 
 length(unique(dat$Study_ID))
 
+# number of animal groups
+
+length(unique(dat$Group_ID))
+
 # Publication year range
 
 min(dat$Year_published)
@@ -413,7 +417,7 @@ m0 <- rma.mv(yi = yi, V = VCV,
              R=list(Phylogeny = VCV_species),
              data = dat)
 
-summary(m0)
+summary(m0, transfm = "tanh") #TODO is the working?? values are the same. 
 
 round(i2_ml(m0), 2) #both species and phylo = 0% variation
 
@@ -491,8 +495,9 @@ summary(m1)
 
 r2_ml(m1)
 
+res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
-fig.4a <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig.4a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory trait as a moderator in global model') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -524,8 +529,9 @@ summary(m4)
 
 r2_ml(m4)
 
+res2 <- mod_results(m4, mod = "Fertilisation_mode", data = dat, group = "Study_ID")
 
-fig.4b <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+fig.4b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -571,7 +577,6 @@ VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
 dat3$PC_type<-as.factor(dat3$PC_type)
 
-
 levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
 
@@ -588,8 +593,9 @@ m4a <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,
 summary(m4a)
 r2_ml(m4a)
 
+res3 <- mod_results(m4a, mod = "PC_type", data = dat3, group = "Study_ID")
 
-fig.4c <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+fig.4c <- orchard_plot(res3, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory traits within internal fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -623,8 +629,9 @@ m4b <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,
 summary(m4b)
 r2_ml(m4b)
 
+res4 <- mod_results(m4b, mod = "PC_type", data = dat4, group = "Study_ID")
 
-fig.4d <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+fig.4d <- orchard_plot(res4, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory traits within external fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -666,7 +673,10 @@ r2_ml(m2)
 #### Fig. 5
 
 ```{r,}
-fig.5 <- orchard_plot(m2, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+
+res5 <- mod_results(m2, mod = "PC_variation_cause2", data = dat, group = "Study_ID")
+
+fig.5 <- orchard_plot(res5, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
