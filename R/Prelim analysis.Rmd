@@ -304,6 +304,7 @@ color_bgroup_tip <- color_bgroup[match(tree$tip.label, names(color_bgroup))]  # 
 data_species_count_K_tree <- data_species_count_K[match(tree$tip.label, names(data_species_count_K))]  # reorder counts to match the order of tips on the tree
 
 #plot locally using base graphics
+plot.new()
 plot(tree, x.lim = 100, y.lim = length(sample_data4$Species)+2, cex = 1, tip.color = color_bgroup_tip, label.offset = 1, edge.color = "grey", font = 3)
 phydataplot(data_species_count_K, tree, col = color_bgroup_tip, offset = 40, scaling = 2, border = "white", lwd = 3, legend = "side") #add counts of effect sizes bars 
 text(90, length(sample_data4$Species)+2, "effect sizes (papers)", font=3) #add counts label
@@ -312,11 +313,6 @@ text(100, 1:length(data_papers_count_N_tree), paste("(", data_papers_count_N_tre
 
 #it is easy to add species silluettes (e.g. one per class) using library(rphylopic)
 
-#OLD CODE (ggtree)
-# tree2 <- ggtree(tree, layout = "circular") %<+% sample_data4
-# cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
-# tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color_manual(values = cols)  
-#TODO also want to add counts of the number of studies on each species
 
 ```
 
@@ -885,6 +881,9 @@ sw(res_fm2)
 ```{r}
 
 # funnel plot
+funnel(m0, xlab = "Zr", ylab = "Standard Eror")
+
+# funnel plot on full model 
 funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror")
 
 #I've added the full model - it looks a bit strange
@@ -948,11 +947,11 @@ for (i in 1:length(levels(dat$leave_out))) {
     d <- dat %>%
         filter(leave_out != levels(dat$leave_out)[i])
 
-    VCV_Sb <- impute_covariance_matrix(vi = d$vi, cluster = d$Study_ID, r = 0.5)
+    VCV_leaveout <- impute_covariance_matrix(vi = d$vi, cluster = d$Study_ID, r = 0.5)
 
-    LeaveOneOut_effectsize[[i]] <- rma.mv(yi = yi, V = VCV_Sb, random = list(~1 |
-        Study_ID, ~1 | Effectsize_ID, ~1| Species), method = "REML", data = dat[dat$leave_out !=
-        levels(dat$leave_out)[i], ])
+    LeaveOneOut_effectsize[[i]] <- rma.mv(yi = yi, V = VCV_leaveout, random = list(~1 |
+        Study_ID, ~1 | Effectsize_ID, ~1| Species), method = "REML", data = d[d$leave_out !=
+        levels(d$leave_out)[i], ])
 }
 
 # writing function for extracting est, ci.lb, and ci.ub from all models
