@@ -495,6 +495,13 @@ summary(m1)
 
 r2_ml(m1)
 
+#sigma2 effect size ID
+# 0.0959 / (0.0959 + 0.0546)
+
+#sigma2 studyID
+# 0.0546 / (0.0959 + 0.0546)
+
+
 res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
 fig.4a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
