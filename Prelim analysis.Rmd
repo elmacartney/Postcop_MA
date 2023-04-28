@@ -1,0 +1,824 @@
+---
+title: "Post-cop trait on paternity"
+author: "Erin Macartney"
+date: '2023-01-10'
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE,
+cache = TRUE, 
+tidy = TRUE, 
+echo = TRUE
+)
+
+rm(list = ls())
+```
+
+# Setting up {.tabset}
+
+## Loading packages
+```{r, message = FALSE}
+
+# devtools::install_github('Mikata-Project/ggthemr', force = TRUE)
+
+pacman::p_load(tidyverse, 
+               here, 
+               metafor, 
+               clubSandwich, 
+               orchaRd,
+               rotl,
+               ape,
+               phytools,
+               ggplot2,
+               ggsignif,
+               ggtree,
+               ggthemr,
+               ggtreeExtra,
+               ggalluvial,
+               patchwork,
+               clubSandwich)
+```
+
+## Loading data and functions
+```{r, message = FALSE}
+dat <- read_csv(here("Data", "Data_raw_crosschecked_variation recoded.csv")) #raw data was used for data processing below
+
+dat <- read_csv(here("Data", "processed_data.csv"))
+source(here("R/func.R")) #functions for converting other statistics into correlations
+tree <- read.tree(file = "species_tree.tre") #loading phylogenetic tree
+```
+
+## Calculating r
+
+Note that this code runs on Data_raw.csv not Data_processed.csv
+```{r, eval = FALSE}
+effect_size_group2 <- with(dat, mapply(group2, 
+                                       mean_low, mean_high, 
+                                       SD_low, SD_high, 
+                                       n_low, n_high))
+
+
+#only selecting study that reported mean of for groups
+
+# dat_a <- dat %>%
+#   filter(First_author == "Yamane")
+
+# effect_size_group4 <- with(dat_a, mapply(group4, 
+#                                        mean_low, mean_med1, mean_med2, mean_high,
+#                                        SD_low, SD_med1, SD_med2, SD_high,
+#                                        n_low, n_med1, n_med2, n_high,
+#                                        sim = 100000))
+
+#manually added these correlations based on the function above
+
+
+effect_size_est <- with(dat, mapply(est_se_b, estimate,SE, N))
+
+effect_size_t <- with(dat, mapply(t_vals_b, t, N))
+
+effect_size_F <- with(dat, mapply(F_vals_b, F, N, reverse = FALSE))
+
+effect_size_p <- with(dat, mapply(p_vals_b, p, N, reverse = FALSE))
+
+
+dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, "effect_size_est" =  effect_size_est, "effect_size_t" =  effect_size_t, "effect_size_F" = effect_size_F, "effect_size_p" = effect_size_p)
+
+#removing unclear F stat direction
+df2 <- subset(dat2, Effectsize_ID !='3')
+
+#combining all r into one column
+
+df3 <- df2 %>%
+    select("Effectsize_ID","Corr_r", "effect_size_group2", "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p")%>% pivot_longer(cols = -Effectsize_ID, values_to = "effect_size", names_to = "summary_statistic") %>% drop_na() 
+
+#merging back with df2
+
+df4 <- merge(df3, df2, by = "Effectsize_ID")
+
+# df2 %>% pivot_longer(cols = c("Corr_r", "effect_size_group2", "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p"), values_to = "effect_size", names_to = "summary_statistic") %>% drop_na(effect_size)
+
+#flipping effect size so that higher = better
+df4$effect_size2<- ifelse(df4$Coin == 2, -df4$effect_size, df4$effect_size) 
+
+# write.csv(df4, "processed_data.csv")
+
+```
+
+## Making species tree
+
+```{r, eval = FALSE}
+
+length(unique(df4$Species)) #34 species
+unique(df4$Species)
+
+taxa <- tnrs_match_names(unique(df4$Species))
+table(taxa$approximate_match) #34
+
+# mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+#HTTP failure: 400 [/v3/tree_of_life/induced_subtree] Error: node_id 'ott3411771' was not found!list(ott3411771 = "pruned_ott_id")
+
+taxa[taxa[["ott_id"]] == "3411771", ] #gryllus_bimaculatus 
+df4$Species[df4$Species == "Gryllus_bimaculatus"]  <- "Gryllus_bimaculata"
+df4$Species[df4$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
+taxa <- tnrs_match_names(unique(df4$Species))
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name") # comes up with warning about dropping singleton nodes
+
+sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) #"Drosophila_melanogaster" "Gadus_morhua"            "Gryllus_bimaculata"      "Sus_domestica" "Coregonus_lavaretus"  "Cyprinus_carpio"  names not matching
+#allocating drosophila melanogaster to wrong ottID
+#changing names of other species
+
+# plot(mytree, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+
+#allocating correct OTTID
+inspect(taxa, taxon_name = "Drosophila_melanogaster")
+taxa <- update(taxa, taxon_name = "Drosophila_melanogaster", new_row_number = 1)
+
+inspect(taxa, taxon_name = "Cyprinus_carpio")
+taxa <- update(taxa, taxon_name = "Cyprinus_carpio", new_row_number = 1)
+
+inspect(taxa, taxon_name = "Coregonus_lavaretus")
+taxa <- update(taxa, taxon_name = "Coregonus_lavaretus", new_row_number = 1)
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+df4$Species[df4$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+# mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+# changing tip labels
+mytree$tip.label[mytree$tip.label == "Sus_scrofa_domesticus"]  <- "Sus_domestica"
+mytree$tip.label[mytree$tip.label == "Gadus_morhua_(species_in_domain_Eukaryota)"]  <- "Gadus_morhua"
+
+sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) # all names match
+
+plot(mytree, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+str(mytree)
+
+write.tree(mytree, file = "species_tree.tre")
+```
+
+## Calculating Zr and Variance
+
+```{r, eval = FALSE}
+
+# df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
+df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N/2, df4$N)
+
+zr <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2)
+
+#adding back to dataframe 
+
+df5 <- bind_cols(df4, zr)
+
+write.csv(df5, "processed_data.csv")
+
+```
+
+
+# Data exploration {.tabset}
+
+## Sample sizes
+
+```{r, eval = FALSE}
+#number of effect sizes
+
+length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
+#why does data go down to 106 then?
+
+#number of studies
+
+length(unique(dat$Study_ID))
+
+# Publication year range
+
+min(dat$Year_published)
+max(dat$Year_published)
+
+#number of species
+length(unique(dat$Species))
+
+#number of classes
+length(unique(dat$Class))
+
+#number of classes
+dat %>%
+  group_by(Class) %>%
+  summarise(n = n_distinct(Study_ID))
+
+#traits
+dat %>%
+  group_by(PC_type) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+# Cause of PC variation 
+
+dat %>%
+  group_by(PC_variation_cause) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+# rearing type
+
+dat %>%
+  group_by(Rearing_type) %>%
+  summarise(n = n_distinct(Study_ID))
+```
+
+## Fig. 1
+
+```{r}
+sample_data <- count(dat, Species)
+sample_data <- as.data.frame(sample_data)
+sample_data2 <- mutate(sample_data, tip.label = Species)
+
+# tree$tip.label <- strip_ott_ids(tree$tip.label, remove_underscores = TRUE)
+
+sample_data3 <- left_join(sample_data2, dat[, c("Species", "Class")],
+    by = "Species")
+
+sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
+
+# sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
+
+sample_data4$Species <- as.character(sample_data4$Species)
+sample_data4$tip.label <- as.character(sample_data4$tip.label)
+sample_data4$Class <- as.factor(sample_data4$Class)
+
+
+#TODO Can't get this figure to work
+
+tree2 <- ggtree(tree, layout = "circular") %<+% sample_data4
+  
+cols <- c("yellow", "violet", "turquoise", "tomato", "thistle", "springgreen", "navy")
+
+tree3 <- tree2 + geom_tippoint(aes(shape = Class, colour = Class)) + scale_color_manual(values = cols)  
+
+#TODO also want to add counts of the number of studies on each species
+
+```
+
+
+## Fig. 2
+
+```{r}
+#TODO why is this code adding all these random small connections. Need to clean up
+
+freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$Competition_order, dat$PC_type, dat$PC_variation_cause)) %>%
+  rename("Fertilisation_mode" = Var1, "Mating_order" = Var2, "Trait" = Var3, "Variation_cause" = Var4)
+
+levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+levels(freq1$Mating_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3", "P1 and P2 (mating order controlled for)" = "4", "other/unclear" = "5")
+
+levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+levels(freq1$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "artificial selcetion" = "5", "unclear/other" = "6")
+
+Fig2a <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Mating_order, axis3 = Trait, axis4 = Variation_cause, y = Freq)) +
+    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Mating order", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top") 
+```
+
+
+# Analysis {.tabset}
+
+## Global effect size
+
+```{r}
+
+dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+
+dat$Species[dat$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
+dat$Phylogeny <- gsub('_',' ',dat$Species)
+tree$tip.label<- gsub('_',' ',tree$tip.label)
+
+
+ # sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
+```
+
+```{r, eval = FALSE}
+branchlength<- compute.brlen(tree, method="Grafen", power=1)
+VCV_species <- vcv(branchlength, corr=TRUE)
+
+
+VCV <- impute_covariance_matrix(vi = dat$vi, cluster = dat$Study_ID, r = 0.5)
+
+# data <- dat %>%
+#   select(Study_ID, Effectsize_ID, Species, yi, vi)
+# complete.cases(data)        
+
+
+m0 <- rma.mv(yi = yi, V = VCV, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat)
+
+summary(m0)
+
+round(i2_ml(m0), 2) #both species and phylo = 0% variation
+
+# m0b <- rma.mv(yi = yi, V = VCV, random = list(~1|Study_ID,
+#                                             ~1|Effectsize_ID),
+#                                             #~1|Species,
+#                                             #~1|Phylogeny),
+#              #R=list(Phylogeny = VCV_species),
+#              data = dat)
+# 
+# # summary(m0b)
+# # 
+#  anova(m0b, m0) # reduced model as slightly lower ARC (delta = 4)
+
+
+```
+### Fig. 3
+```{r}
+Fig3 <- orchard_plot(m0, mod = "1", xlab = "zr", alpha=0.4, group = "Study_ID", data = dat) 
+# +  
+#   geom_errorbarh(aes(xmin = lowerPR, xmax = upperPR), height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5)+ 
+#   geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), height = 0.05, show.legend = FALSE, size = 2)+ 
+#   geom_point(aes(fill = name),  size = 5, shape = 21)+ 
+#   scale_colour_manual(values = "darkorange")+ 
+#   scale_fill_manual(values="darkorange")+ 
+#   scale_size_continuous(range = c(1, 7))+ 
+#   theme(panel.border = element_rect(colour = "black", fill=NA, size=1.3), 
+#         text = element_text(size = 24), 
+#         legend.title = element_text(size = 15),
+#         legend.text = element_text(size = 13)) 
+
+#TODO previous code to modify oarchard plot no longer works
+
+Fig3
+```
+
+## Meta-regression {.tabset}
+
+### Traits
+
+```{r}
+
+#removing trait 2 (testes size)
+# 
+dat1 <- subset(dat, PC_type !=2)
+
+dat1$PC_type<-as.factor(dat1$PC_type)
+
+VCV1 <- impute_covariance_matrix(vi = dat1$vi, cluster = dat1$Study_ID, r = 0.5)
+
+levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+                    
+
+m1 <- rma.mv(yi = yi, V = VCV1, mod = ~PC_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat1)
+
+
+summary(m1)
+
+r2_ml(m1)
+
+
+fig.2 <- orchard_plot(m1, mod = "PC_type", group = "Study_ID", data = dat1, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45))
+
+fig.2
+
+```
+
+### Trait variation cause
+
+```{r}
+
+dat$PC_variation_cause<-as.factor(dat$PC_variation_cause)
+
+levels(dat$PC_variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "experimental selection" = "5", "other" = "6")
+
+#TODO should we remove 'other'?
+
+
+m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m2)
+
+r2_ml(m2)
+
+
+fig.3 <- orchard_plot(m2, mod = "PC_variation_cause", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45))
+
+fig.3
+
+```
+
+### Lab vs Wild-caught
+
+```{r}
+
+#removing 3 (agriculture)
+
+dat2 <- subset(dat, Rearing_type !=3)
+
+dat2$Rearing_type<-as.factor(dat2$Rearing_type)
+
+VCV2 <- impute_covariance_matrix(vi = dat2$vi, cluster = dat2$Study_ID, r = 0.5)
+
+levels(dat2$Rearing_type) <- list("wild" = "1", "wild caught" = "2", "lab" = "4", "other/unclear" = "6")
+
+
+m3 <- rma.mv(yi = yi, V = VCV2, mod = ~Rearing_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat2)
+
+summary(m3)
+
+r2_ml(m3)
+
+#TODO should we remove other/unclear? I think so
+
+fig.4 <- orchard_plot(m3, mod = "Rearing_type", group = "Study_ID", data = dat2, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45))
+
+fig.4
+
+```
+
+### Internal vs external fertilisation
+
+
+```{r}
+
+dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
+
+levels(dat$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+m4 <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m4)
+
+r2_ml(m4)
+
+
+fig.5 <- orchard_plot(m4, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+fig.5 #no difference between fertilisation mode but lets looks at subanalysis. Perhaps different traits are doing different things.
+
+```
+
+#### Combined fert mode and trait
+
+
+```{r}
+
+dat$Fert_trait <- paste(dat$Fertilisation_mode, dat$PC_type, sep = " ")
+
+m4c <- rma.mv(yi = yi, V = VCV, mod = ~Fert_trait-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m4c)
+
+fig.5c <- orchard_plot(m4c, mod = "Fert_trait", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+fig.5c
+```
+
+#### Internal sub-analysis
+
+```{r}
+
+dat3 <- subset(dat, Fertilisation_mode == "internal")
+
+dat3 <- subset(dat3, PC_type !=2)
+
+VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
+
+
+dat3$PC_type<-as.factor(dat3$PC_type)
+
+
+levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+
+
+m4a <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat3)
+
+summary(m4a)
+r2_ml(m4a)
+
+
+fig.5a <- orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
+  theme(axis.text.y = element_text(angle = 45)) 
+
+fig.5a
+
+```
+
+#### External sub-analysis
+
+```{r}
+dat4 <- subset(dat, Fertilisation_mode == "external")
+
+dat4 <- subset(dat4, PC_type !=2)
+
+VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
+
+
+dat4$PC_type<-as.factor(dat4$PC_type)
+
+levels(dat4$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+
+
+m4b <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat4)
+
+summary(m4b)
+r2_ml(m4b)
+
+
+fig.5b <- orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "zr", alpha=0.4)+ ylim(-1,2) +
+  theme(axis.text.y = element_text(angle = 45)) 
+
+fig.5b
+
+```
+
+```{r}
+fig.5c <- (fig.5a + fig.5b) + plot_annotation(tag_levels = "A")
+fig.5c #no differences in traits between internal and external fertilisers
+```
+
+### Precedence 
+
+```{r}
+#TODO need to think about this category some more
+#TODO could also do subanalysis
+#TODO Not sure how to deal with this category. Might be too hard
+
+dat$Precendence<-as.factor(dat$Precendence)
+
+m5 <- rma.mv(yi = yi, V = vi, mod = ~Precendence-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m5)
+
+r2_ml(m5)
+
+
+fig.6 <- orchard_plot(m5, mod = "Precendence", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) 
+
+fig.6
+```
+
+### Competition order 
+
+```{r}
+#TODO a sub analysis for this might make more sense and test for differences in traits and phylo signal
+
+dat$Competition_order<-as.factor(dat$Competition_order)
+
+
+levels(dat$Competition_order) <- list("P1" = "1", "P2" = "2", "Random mixing" = "3", "mating order controlled for" = "4")
+
+m6 <- rma.mv(yi = yi, V = VCV, mod = ~Competition_order-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m6)
+
+r2_ml(m6)
+
+
+m6b <- rma.mv(yi = yi, V = vi, mod = ~Competition_order,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m6b)
+
+
+fig.7 <- orchard_plot(m6, mod = "Competition_order", group = "Study_ID", data = dat, xlab = "zr", alpha=0.4) +
+  theme(axis.text.y = element_text(angle = 45)) 
+
+fig.7
+```
+#### P1 sub-analysis
+
+```{r}
+#have grouped p1 and p2 because both are assumed to be loaded raffles. Does this make sense or will different traits potentially be important for offence/defense?
+
+dat5 <- subset(dat, Competition_order  == "P1")
+
+dat5$PC_type<-as.factor(dat5$PC_type)
+
+VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+
+
+levels(dat5$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6a <- rma.mv(yi = yi, V = VCV5, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat5)
+
+summary(m6a)
+r2_ml(m6a)
+
+
+fig.7a <- orchard_plot(m6a, mod = "PC_type", group = "Study_ID", data = dat5, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+```
+
+#### P2 sub-analysis
+
+```{r}
+#have grouped p1 and p2 because both are assumed to be loaded raffles. Does this make sense or will different traits potentially be important for offence/defense?
+
+dat6 <- subset(dat, Competition_order  == "P2")
+
+dat6$PC_type<-as.factor(dat6$PC_type)
+
+dat6 <- subset(dat6, PC_type %in% c("1", "3", "6", "7"))
+
+levels(dat6$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+
+VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+
+
+
+m6b <- rma.mv(yi = yi, V = VCV6, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6)
+
+summary(m6b)
+r2_ml(m6b)
+
+
+fig.7b <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+```
+
+#### P1 and P2 sub-analysis
+
+```{r}
+#have grouped p1 and p2 because both are assumed to be loaded raffles. Does this make sense or will different traits potentially be important for offence/defense?
+
+dat7 <- subset(dat, Competition_order  %in% c("P1", "P2"))
+
+dat7$PC_type<-as.factor(dat7$PC_type)
+
+VCV7 <- impute_covariance_matrix(vi = dat7$vi, cluster = dat7$Study_ID, r = 0.5)
+
+
+levels(dat7$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6c <- rma.mv(yi = yi, V = VCV7, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat7)
+
+summary(m6c)
+r2_ml(m6c)
+
+
+fig.7c <- orchard_plot(m6c, mod = "PC_type", group = "Study_ID", data = dat7, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+#TODO need to remove normality, and velocity
+```
+
+#### Random mixing sub-analysis
+
+```{r}
+
+dat8 <- subset(dat, Competition_order == "Random mixing")
+
+dat8$PC_type<-as.factor(dat8$PC_type)
+
+VCV8 <- impute_covariance_matrix(vi = dat8$vi, cluster = dat8$Study_ID, r = 0.5)
+
+
+levels(dat8$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m6d <- rma.mv(yi = yi, V = VCV8, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat8)
+
+summary(m6d)
+r2_ml(m6d)
+
+
+fig.7d <- orchard_plot(m6b, mod = "PC_type", group = "Study_ID", data = dat6, xlab = "zr", alpha=0.4)+
+  theme(axis.text.y = element_text(angle = 45)) 
+
+```
+
+
+```{r}
+fig.7e <- (fig.7a + fig.7b + fig.7d)
+fig.7e 
+
+fig.7f <- fig.7c + fig.7d
+
+#TODO could instead do sub analyses within traits
+```
+
+## Publication bias and sensitvity analysis
