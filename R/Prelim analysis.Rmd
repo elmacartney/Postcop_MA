@@ -30,8 +30,6 @@ rm(list = ls())
 # BiocManager::install(version = '3.16')
 # BiocManager::install("ggtree", force = TRUE)
 
-#TODO still can't get ggtree to work with the most up to date version of R and Rstudio. It will occasionally run then stop running again. 
-
 eval(metafor:::.MuMIn)
 
 pacman::p_load(dplyr,
@@ -62,8 +60,7 @@ pacman::p_load(dplyr,
 #Code for loading raw data
 # dat <- read_csv(here("Data", "Data_raw_crosschecked_variation recoded.csv")) #raw data was used for data processing below
 
-# dat <- read_csv(here("Data", "processed_data2.csv"))
-dat <- read_csv(here("Data", "processed_data3.csv"))
+dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
 tree <- read.tree(here("R", "species_tree.tre")) #loading phylogenetic tree
 ```
@@ -314,9 +311,6 @@ phydataplot(data_species_count_K, tree, col = color_bgroup_tip, offset = 40, sca
 text(90, length(sample_data4$Species)+2, "effect sizes (papers)", font=3) #add counts label
 text(95, 1:length(data_species_count_K_tree), data_species_count_K_tree) #add counts of effect sizes numbers 
 text(100, 1:length(data_papers_count_N_tree), paste("(", data_papers_count_N_tree, ")")) #add counts of effect sizes numbers 
-
-#it is easy to add species silluettes (e.g. one per class) using library(rphylopic)
-
 
 ```
 
