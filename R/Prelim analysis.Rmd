@@ -58,9 +58,9 @@ pacman::p_load(dplyr,
 ## Loading data and functions
 ```{r, message = FALSE}
 #Code for loading raw data
-# dat <- read_csv(here("Data", "Data_raw_crosschecked_variation recoded.csv")) #raw data was used for data processing below
+# dat <- read_csv(here("Data", "Data_raw_crosschecked_variationrecoded_totalspermlength.csv")) #raw data was used for data processing below
 
-dat <- read_csv(here("Data", "processed_data.csv"))
+dat <- read_csv(here("Data", "processed_data3.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
 tree <- read.tree(here("R", "species_tree.tre")) #loading phylogenetic tree
 ```
@@ -186,15 +186,9 @@ write.tree(mytree, file = "species_tree.tre")
 
 ```{r, eval = FALSE}
 
-# test
-#df4 <- read_csv(here("Data", "processed_data.csv"))
-
-# TODO - this was wrong - should be N/2 for dependent samples
-#df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N, df4$N/2)
 df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N/2, df4$N)
-# TODO - 38th obs has N = 2.5 replacing with 3.5 (the smallest N in the dataset) - Erin 
-#  the function did say the reason was that N was too small
-df4$N2 <- ifelse(df4$N2 == 2.5, 3.5, df4$N2)
+
+# df4$N2 <- ifelse(df4$N2 == 2.5, 3.5, df4$N2)
 
 df5 <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2, data = df4)
 
@@ -206,8 +200,6 @@ df5 <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2, data = df4)
 write.csv(df5, "processed_data3.csv")
 
 ```
-
-manually having to calculate vi for effect sizes 39, 43 and 44 as for some reason the function isn't calculating it for these ones
 
 # Data exploration {.tabset}
 
@@ -997,4 +989,118 @@ leaveoneout <- ggplot(MA_CVR) + geom_hline(yintercept = 0, lty = 2, lwd = 1) +
 
 leaveoneout
 
+```
+
+### Only using studies of total sperm length
+
+results are qualitatively similar when only total sperm length is included in the set
+
+```{r, eval = FALSE}
+#reducing the dataframe so that only the effect sizes of total sperm length are included
+dat$PC_type_notes <- as.factor(dat$PC_type_notes)
+
+dat_SLtotal <- subset(dat, !(PC_type_notes %in% c("tail", "head", "midpiece")))
+  
+# global model 
+
+VCV <- impute_covariance_matrix(vi = dat_SLtotal$vi, cluster = dat_SLtotal$Study_ID, r = 0.5)
+
+# data <- dat %>%
+#   select(Study_ID, Effectsize_ID, Species, yi, vi)
+# complete.cases(data)        
+
+
+m0a <- rma.mv(yi = yi, V = VCV, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat_SLtotal)
+
+summary(m0a, transfm = "tanh") #TODO is the working?? values are the same. 
+
+round(i2_ml(m0a), 2) #both species and phylo = 0% variation
+
+#traits meta-regression
+
+dat_SLtotala<- subset(dat_SLtotal, PC_type !=2)
+dat_SLtotala <- subset(dat_SLtotala, PC_type !=8)
+
+dat_SLtotala$PC_type<-as.factor(dat_SLtotala$PC_type)
+
+VCV1a <- impute_covariance_matrix(vi = dat_SLtotala$vi, cluster = dat_SLtotala$Study_ID, r = 0.5)
+
+# levels(dat_SLtotala$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+#                     
+
+m1a <- rma.mv(yi = yi, V = VCV1a, mod = ~PC_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_SLtotala)
+
+
+summary(m1a)
+
+r2_ml(m1a)
+
+orchard_plot(m1a, mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Zr", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+  theme(axis.text.y = element_text(angle = 45)) 
+
+#sub analyses
+#internal fert
+
+dat3a <- subset(dat_SLtotala, Fertilisation_mode == "internal")
+
+VCV3a <- impute_covariance_matrix(vi = dat3a$vi, cluster = dat3a$Study_ID, r = 0.5)
+
+dat3a$PC_type<-as.factor(dat3a$PC_type)
+# 
+levels(dat3a$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+m4a <- rma.mv(yi = yi, V = VCV3a, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat3a)
+
+summary(m4a)
+round(i2_ml(m4a), 2)
+r2_ml(m4a)
+
+orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3a, xlab = "Zr", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+  theme(axis.text.y = element_text(angle = 45)) 
+#external fert
+
+dat3b <- subset(dat_SLtotala, Fertilisation_mode == "internal")
+
+VCV3b <- impute_covariance_matrix(vi = dat3b$vi, cluster = dat3b$Study_ID, r = 0.5)
+
+dat3b$PC_type<-as.factor(dat3b$PC_type)
+# 
+levels(dat3b$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+
+m4b <- rma.mv(yi = yi, V = VCV3b, mod = ~PC_type-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat3b)
+
+summary(m4b)
+round(i2_ml(m4b), 2)
+r2_ml(m4b)
+
+orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat3b, xlab = "Zr", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+  theme(axis.text.y = element_text(angle = 45)) 
 ```
