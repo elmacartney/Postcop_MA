@@ -209,7 +209,6 @@ write.csv(df5, "processed_data3.csv")
 # number of effect sizes
 
 length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
-#why does data go down to 106 then?
 
 #number of studies
 
@@ -317,7 +316,7 @@ levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
 
 levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 
-levels(freq1$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic differences" = "5", "unclear/other" = "6")
+levels(freq1$Variation_cause) <- list("genetic + environment" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic differences" = "5", "unclear/other" = "6")
 
 Fig2 <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Trait, axis3 = Variation_cause, y = Freq)) +
     geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
@@ -644,19 +643,23 @@ fig.4
 
 ```{r, message = FALSE}
 
-dat$PC_variation_cause2<-as.factor(dat$PC_variation_cause2)
+dat5 <- subset(dat, PC_variation_cause2 !=6)
 
-levels(dat$PC_variation_cause2) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic variation" = "5", "unclear/other" = "6")
+dat5$PC_variation_cause2<-as.factor(dat5$PC_variation_cause2)
 
+levels(dat5$PC_variation_cause2) <- list("genetic + environmental" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic variation" = "5")
 
-m2 <- rma.mv(yi = yi, V = VCV, mod = ~PC_variation_cause2-1,  
+VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+
+#TODO for some reason the variance VCV was preventing convergence
+m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause2-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
              test = "t",
-             data = dat)
+             data = dat5)
 
 summary(m2)
 
