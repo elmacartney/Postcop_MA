@@ -670,7 +670,7 @@ r2_ml(m2)
 
 ```{r,}
 
-res5 <- mod_results(m2, mod = "PC_variation_cause2", data = dat, group = "Study_ID")
+res5 <- mod_results(m2, mod = "PC_variation_cause2", data = dat5, group = "Study_ID")
 
 fig.5 <- orchard_plot(res5, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -995,8 +995,6 @@ leaveoneout
 ```
 
 ### Only using studies of total sperm length
-
-results are qualitatively similar when only total sperm length is included in the set
 
 ```{r, eval = FALSE}
 #reducing the dataframe so that only the effect sizes of total sperm length are included
