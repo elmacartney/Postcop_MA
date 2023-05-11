@@ -524,6 +524,7 @@ r2_ml(m4)
 res2 <- mod_results(m4, mod = "Fertilisation_mode", data = dat, group = "Study_ID")
 
 fig.4b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+  ylim(-1,1.25) +
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -587,11 +588,12 @@ r2_ml(m4a)
 
 res3 <- mod_results(m4a, mod = "PC_type", data = dat3, group = "Study_ID")
 
-fig.4c <- orchard_plot(res3, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+fig.4c <- orchard_plot(res3, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory traits within internal fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
+
 ```
 
 #### External sub-analysis
@@ -623,7 +625,7 @@ r2_ml(m4b)
 
 res4 <- mod_results(m4b, mod = "PC_type", data = dat4, group = "Study_ID")
 
-fig.4d <- orchard_plot(res4, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
+fig.4d <- orchard_plot(res4, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory traits within external fertilisers') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -996,7 +998,7 @@ leaveoneout
 
 ### Only using studies of total sperm length
 
-```{r, eval = FALSE}
+```{r, results='hide', message = FALSE, warning=FALSE}
 #reducing the dataframe so that only the effect sizes of total sperm length are included
 dat$PC_type_notes <- as.factor(dat$PC_type_notes)
 
@@ -1023,6 +1025,16 @@ summary(m0a, transfm = "tanh") #TODO is the working?? values are the same.
 
 round(i2_ml(m0a), 2) #both species and phylo = 0% variation
 
+res0 <- mod_results(m0a, mod = "1", data = dat_SLtotal, group = "Study_ID")
+# not quite sure why these do not work
+#res0$mod_table$name <- "Overall"
+#res0$data$moderator <- rep("Overall", each = nrow(res0$data))
+FigS3 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
+                    group = "Study_ID", alpha=0.4, transfm = "tanh") +
+  scale_colour_manual(values = c("grey34")) +
+  scale_fill_manual(values=c("grey34")) 
+
+
 #traits meta-regression
 
 dat_SLtotala<- subset(dat_SLtotal, PC_type !=2)
@@ -1032,7 +1044,7 @@ dat_SLtotala$PC_type<-as.factor(dat_SLtotala$PC_type)
 
 VCV1a <- impute_covariance_matrix(vi = dat_SLtotala$vi, cluster = dat_SLtotala$Study_ID, r = 0.5)
 
-# levels(dat_SLtotala$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+levels(dat_SLtotala$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
 #                     
 
 m1a <- rma.mv(yi = yi, V = VCV1a, mod = ~PC_type-1,  
@@ -1044,13 +1056,46 @@ m1a <- rma.mv(yi = yi, V = VCV1a, mod = ~PC_type-1,
              test = "t",
              data = dat_SLtotala)
 
-
 summary(m1a)
 
 r2_ml(m1a)
 
-orchard_plot(m1a, mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Zr", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
-  theme(axis.text.y = element_text(angle = 45)) 
+res1 <- mod_results(m1a, mod = "PC_type", data = dat_SLtotala, group = "Study_ID")
+
+figS4a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory trait as a moderator in global model') +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
+
+#Fert mode
+
+dat_SLtotal$Fertilisation_mode<-as.factor(dat_SLtotal$Fertilisation_mode)
+
+levels(dat_SLtotal$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+m4a <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_SLtotal)
+
+summary(m4a)
+
+r2_ml(m4a)
+
+res2 <- mod_results(m4a, mod = "Fertilisation_mode", data = dat_SLtotal, group = "Study_ID")
+
+figS4b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat_SLtotal, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+  scale_colour_manual(values = c("grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Fertilisation mode as a moderator in global model') +
+    geom_signif(comparisons = list(c("Internal", "External")),
+              annotations = "*")
 
 #sub analyses
 #internal fert
@@ -1076,11 +1121,17 @@ summary(m4a)
 round(i2_ml(m4a), 2)
 r2_ml(m4a)
 
-orchard_plot(m4a, mod = "PC_type", group = "Study_ID", data = dat3a, xlab = "Zr", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
-  theme(axis.text.y = element_text(angle = 45)) 
+res3 <- mod_results(m4a, mod = "PC_type", data = dat3a, group = "Study_ID")
+
+figS4c <- orchard_plot(res3, mod = "PC_type", group = "Study_ID", data = dat3a, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory traits within internal fertilisers') +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
+
 #external fert
 
-dat3b <- subset(dat_SLtotala, Fertilisation_mode == "internal")
+dat3b <- subset(dat_SLtotala, Fertilisation_mode == "external")
 
 VCV3b <- impute_covariance_matrix(vi = dat3b$vi, cluster = dat3b$Study_ID, r = 0.5)
 
@@ -1102,6 +1153,17 @@ summary(m4b)
 round(i2_ml(m4b), 2)
 r2_ml(m4b)
 
-orchard_plot(m4b, mod = "PC_type", group = "Study_ID", data = dat3b, xlab = "Zr", alpha=0.4, transfm = "tanh")+ ylim(-1,1) +
-  theme(axis.text.y = element_text(angle = 45)) 
+res4 <- mod_results(m4b, mod = "PC_type", data = dat3b, group = "Study_ID")
+
+figS4d <- orchard_plot(res4, mod = "PC_type", group = "Study_ID", data = dat3b, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory traits within external fertilisers') +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
+```
+
+### Fig.S4
+```{r,}
+figS4 <- ((figS4a + figS4b)/(figS4c + figS4d)) + plot_annotation(tag_levels = 'A')
+figS4
 ```
