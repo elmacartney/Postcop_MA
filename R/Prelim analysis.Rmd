@@ -309,46 +309,16 @@ text(100, 1:length(data_papers_count_N_tree), paste("(", data_papers_count_N_tre
 ## Fig. 2
 
 ```{r,}
-freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type, dat$PC_variation_cause2)) %>%
-  rename("Fertilisation_mode" = Var1, "Trait" = Var2, "Variation_cause" = Var3)
-
-levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
-
-levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
-
-levels(freq1$Variation_cause) <- list("genetic + environment" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic differences" = "5", "unclear/other" = "6")
-
-Fig2 <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Trait, axis3 = Variation_cause, y = Freq)) +
-    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
-    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
-theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
-    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top")
-
-Fig2
-```
-
-```{r, eval=FALSE}
-# freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$Competition_order, dat$PC_type, dat$PC_variation_cause)) %>%
-#   rename("Fertilisation_mode" = Var1, "Mating_order" = Var2, "Trait" = Var3, "Variation_cause" = Var4)
+# freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type, dat$PC_variation_cause2)) %>%
+#   rename("Fertilisation_mode" = Var1, "Trait" = Var2, "Variation_cause" = Var3)
 # 
 # levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
 # 
-# levels(freq1$Mating_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3", "P1 and P2 (mating order controlled for)" = "4", "other/unclear" = "5")
-# 
 # levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
 # 
-# levels(freq1$Variation_cause) <- list("natural" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "artificial selcetion" = "5", "unclear/other" = "6")
+# levels(freq1$Variation_cause) <- list("genetic + environment" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic differences" = "5", "unclear/other" = "6")
 # 
-# Fig2a <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Mating_order, axis3 = Trait, axis4 = Variation_cause, y = Freq)) +
+# Fig2 <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Trait, axis3 = Variation_cause, y = Freq)) +
 #     geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
 #     geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
 #     geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
@@ -361,7 +331,40 @@ Fig2
 #     geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
 # theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
 #     vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
-#     plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Mating order", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top")
+#     plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top")
+# 
+# Fig2
+```
+
+```{r, eval=FALSE}
+
+#TODO why does this keep adding a bunch of noise on alluvial plot??
+
+freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$Competition_order, dat$PC_type, dat$PC_variation_cause2)) %>%
+  rename("Fertilisation_mode" = Var1, "Mating_order" = Var2, "Trait" = Var3, "Variation_cause" = Var4)
+
+levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+levels(freq1$Mating_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3", "P1 and P2 (mating order controlled for)" = "4", "other/unclear" = "5")
+
+levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+levels(freq1$Variation_cause) <-list("genetic + environment" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic differences" = "5", "unclear/other" = "6")
+
+Fig2a <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Mating_order, axis3 = Trait, axis4 = Variation_cause, y = Freq)) +
+    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + "stratum",
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + aes(label
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + =
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + after_stat(stratum)))
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + #theme_minimal()
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Mating order", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top")
 ```
 
 
@@ -489,13 +492,11 @@ r2_ml(m1)
 
 res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
-fig.4a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig.4 <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory trait as a moderator in global model') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
-
-# fig.4a
 
 ```
 
@@ -567,6 +568,18 @@ dat3 <- subset(dat3, PC_type !=2)
 
 VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
+m4a <- rma.mv(yi = yi, V = VCV3, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat3)
+
+summary(m4a, transfm = "tanh")
+
+round(i2_ml(m4a), 2)
+
 
 dat3$PC_type<-as.factor(dat3$PC_type)
 
@@ -574,7 +587,7 @@ levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm 
 levels(dat3$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
 
 
-m4a <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,  
+m4a_MR <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -583,10 +596,10 @@ m4a <- rma.mv(yi = yi, V = VCV3, mod = ~PC_type-1,
              test = "t",
              data = dat3)
 
-summary(m4a)
-r2_ml(m4a)
+summary(m4a_MR)
+r2_ml(m4a_MR)
 
-res3 <- mod_results(m4a, mod = "PC_type", data = dat3, group = "Study_ID")
+res3 <- mod_results(m4a_MR, mod = "PC_type", data = dat3, group = "Study_ID")
 
 fig.4c <- orchard_plot(res3, mod = "PC_type", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -605,13 +618,24 @@ dat4 <- subset(dat4, PC_type !=2)
 
 VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
 
+m4b <- rma.mv(yi = yi, V = VCV4, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat4)
+
+summary(m4b, transfm = "tanh")
+
+round(i2_ml(m4b), 2)
 
 dat4$PC_type<-as.factor(dat4$PC_type)
 
 levels(dat4$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
 
 
-m4b <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,  
+m4b_MR <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -620,10 +644,10 @@ m4b <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,
              test = "t",
              data = dat4)
 
-summary(m4b)
-r2_ml(m4b)
+summary(m4_MR)
+r2_ml(m4b_MR)
 
-res4 <- mod_results(m4b, mod = "PC_type", data = dat4, group = "Study_ID")
+res4 <- mod_results(m4b_MR, mod = "PC_type", data = dat4, group = "Study_ID")
 
 fig.4d <- orchard_plot(res4, mod = "PC_type", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
