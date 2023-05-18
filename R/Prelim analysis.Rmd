@@ -644,7 +644,7 @@ m4b_MR <- rma.mv(yi = yi, V = VCV4, mod = ~PC_type-1,
              test = "t",
              data = dat4)
 
-summary(m4_MR)
+summary(m4b_MR)
 r2_ml(m4b_MR)
 
 res4 <- mod_results(m4b_MR, mod = "PC_type", data = dat4, group = "Study_ID")
@@ -663,6 +663,368 @@ fig.4d <- orchard_plot(res4, mod = "PC_type", group = "Study_ID", data = dat4, x
 fig.4 <- ((fig.4a + fig.4b)/(fig.4c + fig.4d)) + plot_annotation(tag_levels = 'A')
 fig.4
 ```
+
+
+### Trait sub analysis
+
+#### Sperm number
+
+```{r,}
+
+dat5 <- subset(dat, PC_type == 1)
+
+VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+
+m5 <- rma.mv(yi = yi, V = VCV5, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat5)
+
+summary(m5, transfm = "tanh")
+
+round(i2_ml(m5), 2) #no phylogenetic signal
+
+#including fert mode as a moderator
+
+m5_MR <- rma.mv(yi = yi, V = VCV5, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat5)
+
+summary(m5_MR)
+r2_ml(m5_MR)
+
+res5 <- mod_results(m5_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
+
+fig.5 <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+#including mating order
+
+dat5b <- subset(dat5, Competition_order <4)
+
+dat5b$Competition_order <- as.factor(dat5b$Competition_order)
+
+
+VCV5b <- impute_covariance_matrix(vi = dat5b$vi, cluster = dat5b$Study_ID, r = 0.5)
+
+
+m5_MRb <- rma.mv(yi = yi, V = VCV5b, mod = ~Competition_order-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat5b)
+
+summary(m5_MRb)
+r2_ml(m5_MRb)
+
+res5b <- mod_results(m5_MRb, mod = "Competition_order", data = dat5b, group = "Study_ID")
+
+levels(dat5b$Competition_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3")
+
+fig.5b <- orchard_plot(m5_MRb, mod = "Competition_order", group = "Study_ID", data = dat5b, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+```
+
+#### Sperm length (all measures)
+
+```{r,}
+
+dat6 <- subset(dat, PC_type == 3)
+
+VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+
+m6 <- rma.mv(yi = yi, V = VCV6, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat6)
+
+summary(m6, transfm = "tanh")
+
+round(i2_ml(m6), 2) #Species non-phylogenetic signal explains a lot!... but it's not due to fertilisation mode
+# 
+# res0 <- mod_results(m6, mod = "1", data = dat6, group = "Study_ID")
+# 
+# fig.6a <- orchard_plot(res0, mod = "1", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+#   theme(axis.text.y = element_text(angle = 45))
+
+#including fert mode as a moderator
+
+m6_MR <- rma.mv(yi = yi, V = VCV6, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6)
+
+summary(m6_MR)
+r2_ml(m6_MR)
+
+res6 <- mod_results(m6_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
+
+fig.6 <- orchard_plot(res6, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+### including mating order as a moderator
+
+dat6b <- subset(dat6, Competition_order <4)
+
+dat6b$Competition_order <- as.factor(dat6b$Competition_order)
+
+VCV6b <- impute_covariance_matrix(vi = dat6b$vi, cluster = dat6b$Study_ID, r = 0.5)
+
+m6_MRb <- rma.mv(yi = yi, V = VCV6b, mod = ~Competition_order-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6b)
+
+summary(m6_MRb)
+r2_ml(m6_MRb)
+
+res6b <- mod_results(m6_MRb, mod = "Competition_order", data = dat6b, group = "Study_ID")
+
+levels(dat6b$Competition_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3")
+
+fig.6b <- orchard_plot(m6_MRb, mod = "Competition_order", group = "Study_ID", data = dat6b, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+```
+
+#### Sperm length (just total)
+
+```{r}
+dat6 <- subset(dat, PC_type == 3)
+
+dat6c <- subset(dat6, !(PC_type_notes %in% c("tail", "head", "midpiece")))
+
+VCV6c <- impute_covariance_matrix(vi = dat6c$vi, cluster = dat6c$Study_ID, r = 0.5)
+
+m6c <- rma.mv(yi = yi, V = VCV6c, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat6c)
+
+summary(m6c, transfm = "tanh")
+
+round(i2_ml(m6c), 2) #Species non-phylogenetic signal explains a lot!... but it's not due to fertilisation mode
+
+m6_MRc <- rma.mv(yi = yi, V = VCV6c, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6c)
+
+summary(m6_MRc)
+r2_ml(m6_MRc)
+
+res6c <- mod_results(m6_MRc, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
+
+fig.6c <- orchard_plot(res6c, mod = "Fertilisation_mode", group = "Study_ID", data = dat6c, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+### including mating order as a moderator
+## no P1
+dat6d <- subset(dat6c, Competition_order <4)
+
+dat6d$Competition_order <- as.factor(dat6d$Competition_order)
+
+VCV6d <- impute_covariance_matrix(vi = dat6d$vi, cluster = dat6d$Study_ID, r = 0.5)
+
+m6_MRd <- rma.mv(yi = yi, V = VCV6d, mod = ~Competition_order-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6d)
+
+summary(m6_MRd)
+r2_ml(m6_MRd)
+
+res6d <- mod_results(m6_MRd, mod = "Competition_order", data = dat6d, group = "Study_ID")
+
+levels(dat6d$Competition_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3")
+
+fig.6d <- orchard_plot(m6_MRd, mod = "Competition_order", group = "Study_ID", data = dat6d, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+```
+
+
+#### Sperm velocity
+
+```{r}
+
+dat7<- subset(dat, PC_type == 4)
+
+VCV7 <- impute_covariance_matrix(vi = dat7$vi, cluster = dat7$Study_ID, r = 0.5)
+
+m7 <- rma.mv(yi = yi, V = VCV7, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat7)
+
+summary(m7, transfm = "tanh")
+
+round(i2_ml(m7), 2) #Species phylogeny explains a lot of variation in velocity
+
+m7_MR <- rma.mv(yi = yi, V = VCV7, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat7)
+
+summary(m7_MR)
+r2_ml(m7_MR)
+
+res7 <- mod_results(m7_MR, mod = "Fertilisation_mode", data = dat7, group = "Study_ID")
+
+fig.7 <- orchard_plot(res7, mod = "Fertilisation_mode", group = "Study_ID", data = dat7, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+### including mating order as a moderator
+## no P1
+dat7b <- subset(dat7, Competition_order <4)
+
+dat7b$Competition_order <- as.factor(dat7b$Competition_order)
+
+VCV7b <- impute_covariance_matrix(vi = dat7b$vi, cluster = dat7b$Study_ID, r = 0.5)
+
+m7_MRb <- rma.mv(yi = yi, V = VCV7, mod = ~Competition_order-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat7b)
+
+summary(m7_MRb)
+r2_ml(m7_MRb)
+
+res7b <- mod_results(m7_MRb, mod = "Competition_order", data = dat7b, group = "Study_ID")
+
+levels(dat7b$Competition_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3")
+
+fig.7b <- orchard_plot(m7_MRb, mod = "Competition_order", group = "Study_ID", data = dat6d, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+```
+
+#### Sperm normality
+
+```{r}
+dat8<- subset(dat, PC_type == 5)
+
+VCV8 <- impute_covariance_matrix(vi = dat8$vi, cluster = dat8$Study_ID, r = 0.5)
+
+m8 <- rma.mv(yi = yi, V = VCV8, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat8)
+
+summary(m8, transfm = "tanh")
+
+round(i2_ml(m8), 2) #Species non-phylogeny explain a lot of variation
+
+m8_MR <- rma.mv(yi = yi, V = VCV8, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat8)
+
+summary(m8_MR)
+r2_ml(m8_MR) ## fert mode explains 26% of total variation!!
+
+res8 <- mod_results(m8_MR, mod = "Fertilisation_mode", data = dat8, group = "Study_ID")
+
+fig.8 <- orchard_plot(res8, mod = "Fertilisation_mode", group = "Study_ID", data = dat8, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+### including mating order as a moderator
+## no P1
+dat8b <- subset(dat8, Competition_order <4)
+
+dat8b$Competition_order <- as.factor(dat8b$Competition_order)
+
+VCV8b <- impute_covariance_matrix(vi = dat8b$vi, cluster = dat8b$Study_ID, r = 0.5)
+
+m8_MRb <- rma.mv(yi = yi, V = VCV8b, mod = ~Competition_order-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat8b)
+
+### model not converging
+
+summary(m7_MRb)
+r2_ml(m7_MRb)
+
+res7b <- mod_results(m7_MRb, mod = "Competition_order", data = dat7b, group = "Study_ID")
+
+levels(dat7b$Competition_order) <- list("P1" = "1", "P2" = "2", "random mixing" = "3")
+
+fig.7b <- orchard_plot(m7_MRb, mod = "Competition_order", group = "Study_ID", data = dat6d, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))
+
+
+#just including effect size ID rather than study as a random effect due to nearly non-identifiability between ES_ID and study
+
+m8c <- rma.mv(yi = yi, V = VCV8, 
+             random = list( ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat8)
+
+summary(m8c, transfm = "tanh")
+
+round(i2_ml(m8c), 2) #Species non-phylogeny explain a lot of variation
+
+```
+
 
 
 ### Trait variation cause
