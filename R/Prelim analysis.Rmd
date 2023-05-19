@@ -492,14 +492,13 @@ r2_ml(m1)
 
 res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
-fig.4 <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig.3a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
-  ggtitle('Post-copulatory trait as a moderator in global model') +
-    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+   scale_colour_manual(values = c("grey34","grey34","grey34","grey34","grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34","grey34","grey34","grey34","grey34"))  + geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
 
 ```
-
 
 ### Internal vs external fertilisation
 
@@ -524,12 +523,11 @@ r2_ml(m4)
 
 res2 <- mod_results(m4, mod = "Fertilisation_mode", data = dat, group = "Study_ID")
 
-fig.4b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+fig.3b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
   ylim(-1,1.25) +
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
-  theme(axis.text.y = element_text(angle = 45)) +
-  ggtitle('Fertilisation mode as a moderator in global model') +
+  theme(axis.text.y = element_text(angle = 45))+
     geom_signif(comparisons = list(c("Internal", "External")),
               annotations = "*")
 
@@ -703,8 +701,11 @@ r2_ml(m5_MR)
 
 res5 <- mod_results(m5_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
 
-fig.5 <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
-  theme(axis.text.y = element_text(angle = 45))
+fig.5a <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Sperm number') +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
 
 #including mating order
 
@@ -778,8 +779,11 @@ r2_ml(m6_MR)
 
 res6 <- mod_results(m6_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
 
-fig.6 <- orchard_plot(res6, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
-  theme(axis.text.y = element_text(angle = 45))
+fig.5b <- orchard_plot(res6, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle("Sperm length") +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
 
 ### including mating order as a moderator
 
@@ -912,8 +916,11 @@ r2_ml(m7_MR)
 
 res7 <- mod_results(m7_MR, mod = "Fertilisation_mode", data = dat7, group = "Study_ID")
 
-fig.7 <- orchard_plot(res7, mod = "Fertilisation_mode", group = "Study_ID", data = dat7, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
-  theme(axis.text.y = element_text(angle = 45))
+fig.5c <- orchard_plot(res7, mod = "Fertilisation_mode", group = "Study_ID", data = dat7, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))+
+  ggtitle("Sperm velocity") +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
 
 ### including mating order as a moderator
 ## no P1
@@ -951,9 +958,9 @@ dat8<- subset(dat, PC_type == 5)
 
 VCV8 <- impute_covariance_matrix(vi = dat8$vi, cluster = dat8$Study_ID, r = 0.5)
 
+#removed study ID due to near-nonidentifiability
 m8 <- rma.mv(yi = yi, V = VCV8, 
-             random = list(~1|Study_ID,
-                          ~1|Effectsize_ID,
+             random = list(~1|Effectsize_ID,
                           ~1|Species,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
@@ -964,8 +971,7 @@ summary(m8, transfm = "tanh")
 round(i2_ml(m8), 2) #Species non-phylogeny explain a lot of variation
 
 m8_MR <- rma.mv(yi = yi, V = VCV8, mod = ~Fertilisation_mode-1,  
-              random = list(~1|Study_ID,
-                          ~1|Effectsize_ID,
+              random = list(~1|Effectsize_ID,
                           ~1|Species,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
@@ -973,12 +979,15 @@ m8_MR <- rma.mv(yi = yi, V = VCV8, mod = ~Fertilisation_mode-1,
              data = dat8)
 
 summary(m8_MR)
-r2_ml(m8_MR) ## fert mode explains 26% of total variation!!
+r2_ml(m8_MR) ## fert mode explains 76% of total variation!!
 
 res8 <- mod_results(m8_MR, mod = "Fertilisation_mode", data = dat8, group = "Study_ID")
 
-fig.8 <- orchard_plot(res8, mod = "Fertilisation_mode", group = "Study_ID", data = dat8, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
-  theme(axis.text.y = element_text(angle = 45))
+fig.5d <- orchard_plot(res8, mod = "Fertilisation_mode", group = "Effectsize_ID", data = dat8, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))+
+  ggtitle("Sperm normaility") +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
 
 ### including mating order as a moderator
 ## no P1
@@ -1009,23 +1018,24 @@ levels(dat7b$Competition_order) <- list("P1" = "1", "P2" = "2", "random mixing" 
 fig.7b <- orchard_plot(m7_MRb, mod = "Competition_order", group = "Study_ID", data = dat6d, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45))
 
+```
 
-#just including effect size ID rather than study as a random effect due to nearly non-identifiability between ES_ID and study
+#### Fig. 3
 
-m8c <- rma.mv(yi = yi, V = VCV8, 
-             random = list( ~1|Effectsize_ID,
-                          ~1|Species,
-                         ~1|Phylogeny),
-             R=list(Phylogeny = VCV_species),
-             data = dat8)
+```{r,}
 
-summary(m8c, transfm = "tanh")
-
-round(i2_ml(m8c), 2) #Species non-phylogeny explain a lot of variation
+Fig.3 <- (fig.3a/fig.3b/fig.3c)+ plot_annotation(tag_levels = 'A')
 
 ```
 
+#### Fig.4
 
+```{r}
+
+fig.5 <- ((fig.5a + fig.5b)/(fig.5c + fig.5d)) + plot_annotation(tag_levels = 'A')
+fig.5
+
+```
 
 ### Trait variation cause
 
@@ -1052,23 +1062,17 @@ m2 <- rma.mv(yi = yi, V = vi, mod = ~PC_variation_cause2-1,
 summary(m2)
 
 r2_ml(m2)
-```
 
-#### Fig. 5
-
-```{r,}
 
 res5 <- mod_results(m2, mod = "PC_variation_cause2", data = dat5, group = "Study_ID")
 
-fig.5 <- orchard_plot(res5, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig.3c <- orchard_plot(res5, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
     geom_signif(comparisons = list(c("Other", "Experimental selection", "Direct manipulation", "Age", "Environmental plasticity", "Natural")),
               annotations = "*")
-
-fig.5
 ```
 
 

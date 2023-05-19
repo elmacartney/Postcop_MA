@@ -1,0 +1,913 @@
+---
+title: "Post-cop meta-analysis"
+author: Erin L Macartney, Kyle Morrison, Rhonda Snook, Malgorzata Lagisz, Shinichi
+  Nakagawa
+date: "2023-05-19"
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE,
+cache = TRUE, 
+tidy = TRUE, 
+echo = TRUE
+)
+
+rm(list = ls())
+```
+
+# Setting up {.tabset}
+
+## Loading packages
+```{r, message = FALSE}
+
+# devtools::install_github('Mikata-Project/ggthemr', force = TRUE)
+
+# if (!require("BiocManager", quietly = TRUE))
+# install.packages("BiocManager")
+# 
+# BiocManager::install(version = '3.16')
+# BiocManager::install("ggtree", force = TRUE)
+
+eval(metafor:::.MuMIn)
+
+pacman::p_load(dplyr,
+               tidyr,
+               readr,
+               here, 
+               metafor, 
+               clubSandwich, 
+               orchaRd,
+               rotl,
+               ape,
+               tibble,
+               phytools,
+               ggplot2,
+               ggsignif,
+               ggtree,
+               ggthemr,
+               ggtreeExtra,
+               ggalluvial,
+               patchwork,
+               clubSandwich,
+               MuMIn)
+```
+
+## Loading data and functions
+```{r, message = FALSE}
+#Code for loading raw data
+# dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
+
+dat <- read_csv(here("Data", "processed_data.csv"))
+source(here("R/func.R")) #functions for converting other statistics into correlations
+tree <- read.tree(here("R", "species_tree.tre")) #loading phylogenetic tree
+```
+
+## Calculating r
+
+Note that this code runs on Data_raw.csv not Data_processed.csv
+```{r, eval = FALSE}
+effect_size_group2 <- with(dat, mapply(group2, 
+                                       mean_low, mean_high, 
+                                       SD_low, SD_high, 
+                                       n_low, n_high))
+
+
+effect_size_est <- with(dat, mapply(est_se_b, estimate,SE, N))
+
+effect_size_t <- with(dat, mapply(t_vals_b, t, N))
+
+effect_size_F <- with(dat, mapply(F_vals_b, F, N, reverse = FALSE))
+
+effect_size_p <- with(dat, mapply(p_vals_b, p, N, reverse = FALSE))
+
+
+dat2 <- bind_cols(dat, "effect_size_group2" = effect_size_group2, 
+                      "effect_size_est" =  effect_size_est, 
+                      "effect_size_t" =  effect_size_t, 
+                      "effect_size_F" = effect_size_F, 
+                      "effect_size_p" = effect_size_p)
+
+#removing unclear F stat direction
+df2 <- subset(dat2, Effectsize_ID !='3')
+
+#combining all r into one column
+
+df3 <- df2 %>%
+    select("Effectsize_ID","Corr_r", "effect_size_group2", 
+    "effect_size_est","effect_size_t", "effect_size_F", "effect_size_p") %>% 
+    pivot_longer(cols = -Effectsize_ID, values_to = "effect_size", names_to = "summary_statistic") %>% 
+    drop_na() 
+
+#merging back with df2
+
+df4 <- merge(df3, df2, by = "Effectsize_ID")
+
+#flipping effect size so that higher = better
+df4$effect_size2<- ifelse(df4$Coin == 2, -df4$effect_size, df4$effect_size) 
+
+```
+
+## Making species tree
+
+```{r, eval = FALSE}
+
+length(unique(df4$Species)) #34 species
+unique(df4$Species)
+
+taxa <- tnrs_match_names(unique(df4$Species))
+# table(taxa$approximate_match) #34
+
+taxa[taxa[["ott_id"]] == "3411771", ] #gryllus_bimaculatus 
+df4$Species[df4$Species == "Gryllus_bimaculatus"]  <- "Gryllus_bimaculata"
+df4$Species[df4$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
+taxa <- tnrs_match_names(unique(df4$Species))
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name") # comes up with warning about dropping singleton nodes
+
+# sort(setdiff(unique(df4$Species), as.character(mytree$tip.label)))
+#"Drosophila_melanogaster" "Gadus_morhua"            "Gryllus_bimaculata"      "Sus_domestica" "Coregonus_lavaretus"  "Cyprinus_carpio"  names not matching
+#allocating drosophila melanogaster to wrong ottID
+
+#changing names of other species
+
+#allocating correct OTTID
+inspect(taxa, taxon_name = "Drosophila_melanogaster")
+taxa <- update(taxa, taxon_name = "Drosophila_melanogaster", new_row_number = 1)
+
+inspect(taxa, taxon_name = "Cyprinus_carpio")
+taxa <- update(taxa, taxon_name = "Cyprinus_carpio", new_row_number = 1)
+
+inspect(taxa, taxon_name = "Coregonus_lavaretus")
+taxa <- update(taxa, taxon_name = "Coregonus_lavaretus", new_row_number = 1)
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+df4$Species[df4$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+# mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+# changing tip labels
+mytree$tip.label[mytree$tip.label == "Sus_scrofa_domesticus"]  <- "Sus_domestica"
+mytree$tip.label[mytree$tip.label == "Gadus_morhua_(species_in_domain_Eukaryota)"]  <- "Gadus_morhua"
+mytree$tip.label[mytree$tip.label == "Luciobarbus_capito"] <- "Cyprinus_carpio"
+
+sort(setdiff(unique(df4$Species), as.character(mytree$tip.label))) # all names match
+
+plot(mytree, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+# str(mytree)
+
+write.tree(mytree, file = "species_tree.tre")
+```
+## Calculating Zr and Variance
+
+```{r, eval = FALSE}
+
+df4$N2 <- ifelse(df4$N_dependent == "dependent", df4$N/2, df4$N)
+
+df5 <- escalc(measure = "ZCOR", ni = df4$N2, ri = df4$effect_size2, data = df4)
+
+#adding back to dataframe 
+#df5 <- bind_cols(df4, zr)
+
+write.csv(df5, "processed_data.csv")
+```
+
+# Data exploration {.tabset}
+
+## Sample sizes
+
+```{r, eval = FALSE}
+# number of effect sizes
+length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
+
+#number of studies
+length(unique(dat$Study_ID))
+
+# number of animal groups
+length(unique(dat$Group_ID))
+
+# Publication year range
+min(dat$Year_published)
+max(dat$Year_published)
+
+#number of species
+length(unique(dat$Species))
+
+#number of classes
+length(unique(dat$Class))
+
+#number of classes
+dat %>%
+  group_by(Class) %>%
+  summarise(n = n_distinct(Study_ID))
+
+#fertilisation mode
+dat %>%
+  group_by(Fertilisation_mode) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+#traits
+dat %>%
+  group_by(PC_type) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+# Cause of PC variation 
+dat %>%
+  group_by(PC_variation_cause2) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+```
+
+# Analysis {.tabset}
+
+## Global effect size
+
+```{r}
+
+dat$Species[dat$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+
+dat$Phylogeny <- gsub('_',' ',dat$Species)
+tree$tip.label<- gsub('_',' ',tree$tip.label)
+
+
+# sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
+```
+
+```{r, eval = FALSE}
+branchlength<- compute.brlen(tree, method="Grafen", power=1)
+VCV_species <- vcv(branchlength, corr=TRUE)
+
+
+VCV <- impute_covariance_matrix(vi = dat$vi, cluster = dat$Study_ID, r = 0.5)
+
+
+m0 <- rma.mv(yi = yi, V = VCV, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat)
+
+summary(m0, transfm = "tanh") 
+round(i2_ml(m0), 2) 
+
+```
+
+## Meta-regression {.tabset}
+
+### Post-copulatory trait type
+
+```{r, message = FALSE}
+
+#removing trait 2 (testes size)
+
+dat1 <- subset(dat, PC_type !=2)
+
+dat1$PC_type<-as.factor(dat1$PC_type)
+
+VCV1 <- impute_covariance_matrix(vi = dat1$vi, cluster = dat1$Study_ID, r = 0.5)
+
+levels(dat1$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+                    
+
+m1 <- rma.mv(yi = yi, V = VCV1, mod = ~PC_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat1)
+
+
+summary(m1)
+
+r2_ml(m1)
+
+res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
+
+fig.3a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+  theme(axis.text.y = element_text(angle = 45)) +
+   scale_colour_manual(values = c("grey34","grey34","grey34","grey34","grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34","grey34","grey34","grey34","grey34"))  + geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
+
+```
+
+### Fertilisation mode
+
+```{r, message = FALSE}
+
+dat$Fertilisation_mode<-as.factor(dat$Fertilisation_mode)
+
+levels(dat$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+m2 <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m2)
+
+r2_ml(m2)
+
+res2 <- mod_results(m2, mod = "Fertilisation_mode", data = dat, group = "Study_ID")
+
+fig.3b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+  ylim(-1,1.25) +
+  scale_colour_manual(values = c("grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45))+
+    geom_signif(comparisons = list(c("Internal", "External")),
+              annotations = "*")
+
+```
+
+### Trait variation cause
+
+```{r, message = FALSE}
+
+dat2 <- subset(dat, PC_variation_cause2 !=6)
+
+dat2$PC_variation_cause2<-as.factor(dat2$PC_variation_cause2)
+
+levels(dat2$PC_variation_cause2) <- list("genetic + environmental" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic variation" = "5")
+
+VCV2 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+
+m3 <- rma.mv(yi = yi, V = VCV2, mod = ~PC_variation_cause2-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat2)
+
+summary(m3)
+
+r2_ml(m3)
+
+
+res3 <- mod_results(m3, mod = "PC_variation_cause2", data = dat2, group = "Study_ID")
+
+fig.3c <- orchard_plot(res3, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+  theme(axis.text.y = element_text(angle = 45)) +
+  scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+    geom_signif(comparisons = list(c("Other", "Experimental selection", "Direct manipulation", "Age", "Environmental plasticity", "Natural")),
+              annotations = "*")
+```
+
+## Sub-analyses
+
+### Sperm number
+
+```{r,}
+
+dat3 <- subset(dat, PC_type == 1)
+
+VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
+
+m4 <- rma.mv(yi = yi, V = VCV3, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat3)
+
+# summary(m4, transfm = "tanh")
+
+round(i2_ml(m4), 2)
+
+#including fert mode as a moderator
+m4_MR <- rma.mv(yi = yi, V = VCV3, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat3)
+
+summary(m4_MR)
+r2_ml(m4_MR)
+
+res4 <- mod_results(m4_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
+
+fig.4a <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Sperm number') +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
+```
+
+### Sperm length
+
+```{r,}
+dat4 <- subset(dat, PC_type == 3)
+
+VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
+
+m5 <- rma.mv(yi = yi, V = VCV4, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat4)
+
+# summary(m5, transfm = "tanh")
+
+round(i2_ml(m5), 2) 
+
+#including fert mode as a moderator
+
+m5_MR <- rma.mv(yi = yi, V = VCV4, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat4)
+
+summary(m5_MR)
+r2_ml(m5_MR)
+
+res5 <- mod_results(m5_MR, mod = "Fertilisation_mode", data = dat4, group = "Study_ID")
+
+fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle("Sperm length") +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
+```
+
+### Sperm velocity
+
+```{r}
+dat5<- subset(dat, PC_type == 4)
+
+VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+
+m6 <- rma.mv(yi = yi, V = VCV5, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat5)
+
+# summary(m6, transfm = "tanh")
+
+round(i2_ml(m6), 2)
+
+m6_MR <- rma.mv(yi = yi, V = VCV5, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat5)
+
+summary(m6_MR)
+r2_ml(m6_MR)
+
+res5 <- mod_results(m6_MR, mod = "Fertilisation_mode", data = dat7, group = "Study_ID")
+
+fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat7, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))+
+  ggtitle("Sperm velocity") +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
+```
+
+### Sperm normality
+
+```{r}
+dat6<- subset(dat, PC_type == 5)
+
+VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+
+#removed study ID due to near non-identifiability
+m7 <- rma.mv(yi = yi, V = VCV6, 
+             random = list(~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat6)
+
+# summary(m6, transfm = "tanh")
+
+round(i2_ml(m6), 2) 
+
+m7_MR <- rma.mv(yi = yi, V = VCV6, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6)
+
+summary(m7_MR)
+r2_ml(m7_MR)
+
+res6 <- mod_results(m7_MR, mod = "Fertilisation_mode", data = dat6, group = "Study_ID")
+
+fig.4d <- orchard_plot(res6, mod = "Fertilisation_mode", group = "Effectsize_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45))+
+  ggtitle("Sperm normaility") +
+    geom_signif(comparisons = list(c("internal", "external")),
+              annotations = "*")
+```
+
+## Publication bias and sensitivity analysis 
+
+### Multi-moderator model
+```{r}
+dat_fm <- subset(dat, PC_type !=2)
+
+VCV_fm <- impute_covariance_matrix(vi = dat_fm$vi, cluster = dat_fm$Study_ID, r = 0.5)
+
+mod_fm <- rma.mv(yi = yi, V = VCV_fm, mod = ~PC_type-1 + Fertilisation_mode + PC_variation_cause2,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_fm)
+# 
+# summary(mod_fm)
+# 
+# r2_ml(mod_fm)
+
+res_fm <- dredge(mod_fm, trace = 2)
+
+res_fm2 <- subset(res_fm, delta <= 4, recalc.weights = FALSE)
+sw(res_fm2)
+```
+
+### Funnel plots
+```{r}
+
+# funnel plot
+funnel(m0, xlab = "Zr", ylab = "Standard Eror")
+
+# funnel plot on full model 
+funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror")
+
+#I've added the full model - it looks a bit strange
+
+```
+
+### Small-study effects 
+
+```{r}
+
+# small study effect
+dat$sei <- sqrt(dat$vi)
+egger <- rma.mv(yi = yi, V = VCV, 
+             mod = sei,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat)
+
+# no statistical evidence for small-study effect
+summary(egger)
+```
+
+### Decline effect
+```{r}
+#TODO - shinichi - why this does not work
+bubble_plot(egger, mod = "sei", group = "Study_ID", data = dat)
+
+# decline effect
+dat$cYear <- scale(dat$Year_published, center = TRUE, scale = FALSE)
+decline <- rma.mv(yi = yi, V = VCV, 
+             mod = cYear,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat)
+
+# no statistical evidence for decline effect
+summary(decline)
+
+# TODO this does not work - will get this working 
+mod_results(decline, mod = "cYear", group = "Study_ID", data = dat)
+bubble_plot(decline, mod = "cYear", group = "Study_ID", data = dat)
+```
+
+### Leave-one-group-out
+
+```{r}
+
+dat <- dat %>%
+    mutate(leave_out = paste(First_author, Year_published, sep = "_"))
+dat$leave_out <- as.factor(dat$leave_out)
+dat$Year_published <- as.integer(dat$Year_published)
+
+dat$Study_ID <- as.factor(dat$Study_ID)
+
+LeaveOneOut_effectsize <- list()
+for (i in 1:length(levels(dat$leave_out))) {
+    d <- dat %>%
+        filter(leave_out != levels(dat$leave_out)[i])
+
+    VCV_leaveout <- impute_covariance_matrix(vi = d$vi, cluster = d$Study_ID, r = 0.5)
+
+    LeaveOneOut_effectsize[[i]] <- rma.mv(yi = yi, V = VCV_leaveout, random = list(~1 |
+        Study_ID, ~1 | Effectsize_ID, ~1| Species), method = "REML", data = d[d$leave_out !=
+        levels(d$leave_out)[i], ])
+}
+
+# writing function for extracting est, ci.lb, and ci.ub from all models
+est.func <- function(m0) {
+    df <- data.frame(est = m0$yi, lower = m0$ci.lb, upper = m0$ci.ub)
+    return(df)
+}
+
+# using dplyr to form data frame
+MA_CVR <- lapply(LeaveOneOut_effectsize, function(x) est.func(x)) %>%
+    bind_rows %>%
+    mutate(left_out = levels(dat$leave_out))
+
+#TODO why isn't this working??
+
+```
+
+```{r}
+
+# telling ggplot to stop reordering factors
+MA_CVR$left_out <- as.factor(MA_CVR$left_out)
+MA_CVR$left_out <- factor(MA_CVR$left_out, levels = MA_CVR$left_out)
+
+# plotting
+leaveoneout <- ggplot(MA_CVR) + geom_hline(yintercept = 0, lty = 2, lwd = 1) +
+    geom_hline(yintercept = m0$ci.lb, lty = 3, lwd = 0.75, colour = "black") +
+    geom_hline(yintercept = m0$b, lty = 1, lwd = 0.75, colour = "black") + geom_hline(yintercept = m0$ci.ub,
+    lty = 3, lwd = 0.75, colour = "black") + geom_pointrange(aes(x = left_out, y = est,
+    ymin = lower, ymax = upper)) + xlab("Study left out") + ylab("lnRR, 95% CI") +
+    coord_flip() + theme(panel.grid.minor = element_blank()) + theme_bw() + theme(panel.grid.major = element_blank()) +
+    theme(panel.grid.minor.x = element_blank()) + theme(axis.text.y = element_text(size = 6))
+
+leaveoneout
+
+```
+
+### Analysing total sperm length only 
+
+#### Global model
+
+```{r, results='hide', message = FALSE, warning=FALSE}
+#reducing the dataframe so that only the effect sizes of total sperm length are included
+dat$PC_type_notes <- as.factor(dat$PC_type_notes)
+
+dat_SLtotal <- subset(dat, !(PC_type_notes %in% c("tail", "head", "midpiece")))
+
+VCV <- impute_covariance_matrix(vi = dat_SLtotal$vi, cluster = dat_SLtotal$Study_ID, r = 0.5)
+
+m0a <- rma.mv(yi = yi, V = VCV, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat_SLtotal)
+
+summary(m0a, transfm = "tanh") 
+
+round(i2_ml(m0a), 2) 
+```
+
+#### Post-copulatory trait type
+
+```{r}
+dat_SLtotala<- subset(dat_SLtotal, PC_type !=2)
+dat_SLtotala <- subset(dat_SLtotala, PC_type !=8)
+
+dat_SLtotala$PC_type<-as.factor(dat_SLtotala$PC_type)
+
+VCV1a <- impute_covariance_matrix(vi = dat_SLtotala$vi, cluster = dat_SLtotala$Study_ID, r = 0.5)
+
+levels(dat_SLtotala$PC_type) <- list("sperm number" = "1", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7")
+#                     
+
+m1a <- rma.mv(yi = yi, V = VCV1a, mod = ~PC_type-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_SLtotala)
+
+summary(m1a)
+
+r2_ml(m1a)
+```
+
+#### Fertilisation mode
+
+```{r}
+dat_SLtotal$Fertilisation_mode<-as.factor(dat_SLtotal$Fertilisation_mode)
+
+levels(dat_SLtotal$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+m2a <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_SLtotal)
+
+summary(m2a)
+
+r2_ml(m2a)
+
+```
+
+#### Sperm length sub-analysis
+
+```{r}
+dat6 <- subset(dat_SLtotal, PC_type == 3)
+
+VCV6c <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+
+m6c <- rma.mv(yi = yi, V = VCV6c, 
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             data = dat6)
+# 
+# summary(m6c, transfm = "tanh")
+
+round(i2_ml(m6c), 2) 
+
+m6_MRc <- rma.mv(yi = yi, V = VCV6c, mod = ~Fertilisation_mode-1,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat6c)
+
+summary(m6_MRc)
+r2_ml(m6_MRc)
+
+```
+
+# Figures
+
+## Fig. 1
+
+```{r}
+
+sample_data <- count(dat, Species)
+sample_data <- as.data.frame(sample_data)
+sample_data2 <- mutate(sample_data, tip.label = Species)
+
+# tree$tip.label <- strip_ott_ids(tree$tip.label, remove_underscores = TRUE)
+
+sample_data3 <- left_join(sample_data2, dat[, c("Species", "Class")],
+    by = "Species")
+
+sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
+
+# sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
+
+sample_data4$Species <- as.character(sample_data4$Species)
+sample_data4$tip.label <- as.character(sample_data4$tip.label)
+sample_data4$Class <- as.factor(sample_data4$Class)
+
+#prepare effect sizes counts data
+# sample_data4$Species <- sub('Xiphophorus_helleri','Xiphophorus_hellerii', sample_data4$Species) #fix typo
+data_species_count_K <- sample_data4$n
+names(data_species_count_K) <- sample_data4$Species #add row names
+
+#prepare papers counts data
+papers_counts <- dat %>% group_by(Species) %>% summarize(distinct_papers = n_distinct(Paper_ID)) %>% deframe() #using library(tibble)
+
+data_papers_count_N_tree <- papers_counts[match(tree$tip.label, names(papers_counts))]  # reorder counts to match the order of tips 
+
+#prepare Class data
+sample_data4$Class <- as.factor(sample_data4$Class)
+#levels(sample_data4$Class)
+
+#set colors (by Class) for the plot
+color_bgroup <- c("#00A1D5", "#999933", "#A20056", "#E9AF1D", "#E18727", "#661100", "#117733")[sample_data4$Class] #assign colors to Class - based on levels(data_species_bgroup) #biological groups - https://r-charts.com/color-palettes/
+names(color_bgroup) <- sample_data4$Species #make it a named vector
+color_bgroup_tip <- color_bgroup[match(tree$tip.label, names(color_bgroup))]  # reorder colors to match the order of tips on the tree
+data_species_count_K_tree <- data_species_count_K[match(tree$tip.label, names(data_species_count_K))]  # reorder counts to match the order of tips on the tree
+
+#plot locally using base graphics
+plot.new()
+plot(tree, x.lim = 100, y.lim = length(sample_data4$Species)+2, cex = 1, tip.color = color_bgroup_tip, label.offset = 1, edge.color = "grey", font = 3)
+phydataplot(data_species_count_K, tree, col = color_bgroup_tip, offset = 40, scaling = 2, border = "white", lwd = 3, legend = "side") #add counts of effect sizes bars 
+text(90, length(sample_data4$Species)+2, "effect sizes (papers)", font=3) #add counts label
+text(95, 1:length(data_species_count_K_tree), data_species_count_K_tree) #add counts of effect sizes numbers 
+text(100, 1:length(data_papers_count_N_tree), paste("(", data_papers_count_N_tree, ")")) #add counts of effect sizes numbers 
+
+```
+
+## Fig.2 
+
+```{r}
+res0 <- mod_results(m0, mod = "1", data = dat, group = "Study_ID")
+
+Fig.2 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
+                    group = "Study_ID", alpha=0.4, transfm = "tanh") +
+  scale_colour_manual(values = c("grey34")) +
+  scale_fill_manual(values=c("grey34")) 
+
+  # geom_errorbarh(data = res0, aes(xmin = lowerPR, xmax = upperPR), 
+  #     height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5) +
+  # geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), 
+  #     height = 0.05, show.legend = FALSE, size = 2)　+
+  # geom_point(aes(fill = name), shape = 21)+
+  # scale_size_continuous(range = c(1, 7))+
+  # theme(panel.border = element_rect(colour = "black", fill=NA))
+
+# #TODO previous code to modify oarchard plot no longer works
+Fig.2
+```
+
+
+## Fig.3
+```{r,}
+
+Fig.3 <- (fig.3a/fig.3b/fig.3c)+ plot_annotation(tag_levels = 'A')
+Fig.3
+```
+
+## Fig.4
+```{r}
+
+Fig.4 <- ((fig.4a + fig.4b)/(fig.4c + fig.4d)) + plot_annotation(tag_levels = 'A')
+Fig.4
+
+```
+
+## Fig.S3
+```{r}
+res0 <- mod_results(m0a, mod = "1", data = dat_SLtotal, group = "Study_ID")
+
+FigS3 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
+                    group = "Study_ID", alpha=0.4, transfm = "tanh") +
+  scale_colour_manual(values = c("grey34")) +
+  scale_fill_manual(values=c("grey34")) 
+
+```
+
+## Fig.S4
+```{r, message=FALSE}
+res1a <- mod_results(m1a, mod = "PC_type", data = dat_SLtotala, group = "Study_ID")
+
+figS4a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Post-copulatory trait as a moderator in global model') +
+    geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
+              annotations = "*")
+
+res2a <- mod_results(m2a, mod = "Fertilisation_mode", data = dat_SLtotal, group = "Study_ID")
+
+figS4b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", data = dat_SLtotal, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+  scale_colour_manual(values = c("grey34","grey34")) +
+  scale_fill_manual(values=c("grey34","grey34"))  +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Fertilisation mode as a moderator in global model') +
+    geom_signif(comparisons = list(c("Internal", "External")),
+              annotations = "*")
+
+res3a <- mod_results(m6_MRc, mod = "Fertilisation_mode", data = dat6, group = "Study_ID")
+
+figS4c <- orchard_plot(res3a, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+  theme(axis.text.y = element_text(angle = 45)) +
+  ggtitle('Sperm length sub-analysis')
+
+Fig.S4 <- (figS4a/figS4b/figS4c) + plot_annotation(tag_levels = 'A')
+Fig.S4
+```
