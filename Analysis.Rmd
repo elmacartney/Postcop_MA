@@ -341,7 +341,7 @@ dat2$PC_variation_cause2<-as.factor(dat2$PC_variation_cause2)
 
 levels(dat2$PC_variation_cause2) <- list("genetic + environmental" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "genetic variation" = "5")
 
-VCV2 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
+VCV2 <- impute_covariance_matrix(vi = dat2$vi, cluster = dat2$Study_ID, r = 0.5)
 
 m3 <- rma.mv(yi = yi, V = VCV2, mod = ~PC_variation_cause2-1,  
              random = list(~1|Study_ID,
@@ -403,9 +403,9 @@ m4_MR <- rma.mv(yi = yi, V = VCV3, mod = ~Fertilisation_mode-1,
 summary(m4_MR)
 r2_ml(m4_MR)
 
-res4 <- mod_results(m4_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
+res4 <- mod_results(m4_MR, mod = "Fertilisation_mode", data = dat3, group = "Study_ID")
 
-fig.4a <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+fig.4a <- orchard_plot(res4, mod = "Fertilisation_mode", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Sperm number') +
     geom_signif(comparisons = list(c("internal", "external")),
@@ -455,8 +455,8 @@ fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", dat
 ```
 
 ### Sperm velocity
-
 ```{r}
+
 dat5<- subset(dat, PC_type == 4)
 
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
@@ -866,7 +866,7 @@ Fig.3
 ## Fig.4
 ```{r}
 
-Fig.4 <- ((fig.4a + fig.4b)/(fig.4c + fig.4d)) + plot_annotation(tag_levels = 'A')
+Fig.4 <- (fig.4a / fig.4b/fig.4c) + plot_annotation(tag_levels = 'A')
 Fig.4
 
 ```
