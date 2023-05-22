@@ -381,6 +381,10 @@ dat3$Species <- as.factor(dat3$Species)
 #   group_by(Species) %>%
 #   summarise(n = n_distinct(Effectsize_ID))
 
+# dat3 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Study_ID))
+
 VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
 m4 <- rma.mv(yi = yi, V = VCV3, 
@@ -425,6 +429,12 @@ dat4 <- subset(dat, PC_type == 3)
 # dat4 %>%
 #   group_by(Species) %>%
 #   summarise(n = n_distinct(Effectsize_ID))
+
+# nearing on non-identifiability but not quite with species and study
+#TODO discuss with shinichi
+dat4 %>%
+  group_by(Species) %>%
+  summarise(n = n_distinct(Study_ID))
 
 VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
 
@@ -811,7 +821,7 @@ sample_data3 <- left_join(sample_data2, dat[, c("Species", "Class")],
 
 sample_data4 <- distinct(sample_data3, Species, .keep_all = TRUE)
 
-# sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
+sample_data4$tip.label <- gsub('_',' ',sample_data4$tip.label)
 
 sample_data4$Species <- as.character(sample_data4$Species)
 sample_data4$tip.label <- as.character(sample_data4$tip.label)
@@ -924,4 +934,80 @@ figS4c <- orchard_plot(res3a, mod = "Fertilisation_mode", group = "Study_ID", da
 
 Fig.S4 <- (figS4a/figS4b/figS4c) + plot_annotation(tag_levels = 'A')
 Fig.S4
+```
+
+## Fig.S5
+
+``` {r, eval = FALSE}
+#creating tree of species that only had sperm length
+length(unique(dat4$Species)) #12 species
+dat4$Species <-as.character(dat4$Species)
+
+taxa <- tnrs_match_names(unique(dat4$Species))
+
+taxa[taxa[["ott_id"]] == "3411771", ] #gryllus_bimaculatus 
+dat4$Species[dat4$Species == "Gryllus_bimaculatus"]  <- "Gryllus_bimaculata"
+dat4$Species[dat4$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
+taxa <- tnrs_match_names(unique(dat4$Species))
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+#allocating correct OTTID
+inspect(taxa, taxon_name = "Drosophila_melanogaster")
+taxa <- update(taxa, taxon_name = "Drosophila_melanogaster", new_row_number = 1)
+
+mytree_spermlength <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+dat4$Species[dat4$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+
+# changing tip labels
+mytree_spermlength$tip.label[mytree_spermlength$tip.label == "Sus_scrofa_domesticus"]  <- "Sus_domestica"
+mytree_spermlength$tip.label[mytree_spermlength$tip.label == "Gadus_morhua_(species_in_domain_Eukaryota)"]  <- "Gadus_morhua"
+mytree_spermlength$tip.label[mytree_spermlength$tip.label == "Luciobarbus_capito"] <- "Cyprinus_carpio"
+
+sort(setdiff(unique(dat4$Species), as.character(mytree_spermlength$tip.label))) # all names match
+
+plot(mytree_spermlength, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+# str(mytree)
+
+write.tree(mytree_spermlength, file = "mytree_spermlength.tre")
+```
+
+```{r, eval = FALSE}
+
+Note that most of this figure was manually edited
+mytree_spermlength <- read.tree(here("R", "mytree_spermlength.tre"))
+
+# tip_labels <- data.frame(
+#   tip = mytree_spermlength$tip.label,
+#   label = mytree_spermlength$tip.label)
+
+# tip_labels$tip <- gsub('_',' ',tip_labels$tip)
+# tip_labels$label <- gsub('_',' ',tip_labels$label)
+
+plottree <- ggtree(mytree_spermlength) + 
+  geom_tiplab(size = 3, hjust = -0.1, align = TRUE)
+
+#can't get ggtree to plot tiplabels
+# plottree <- plottree +
+#   geom_tiplab(data = tip_labels, aes(label = label, x = tip), size = 3, hjust = -0.1, geom = "text", offset = 2)
+
+# plot(plottree)
+dat4$Species <- as.factor(dat4$Species)
+
+#Taking the average effect size per species
+dat4_averageeffect <- dat4 %>%
+  group_by(Species) %>%
+  summarize(mean_zr = mean(yi))
+  
+d1 <- data.frame(id=mytree_spermlength$tip.label, zr=dat4_averageeffect$mean_zr)
+
+#TODO can't figure out how to fit tree into facet
+Figs5 <- facet_plot(plottree, panel="dot", data=d1, geom=geom_point, aes(x=zr), size=2.5) +
+  theme(axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10)) +
+  geom_vline(xintercept=0) 
+
+
 ```
