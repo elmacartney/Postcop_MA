@@ -375,6 +375,11 @@ fig.3c <- orchard_plot(res3, mod = "PC_variation_cause2", group = "Study_ID", da
 ```{r,}
 
 dat3 <- subset(dat, PC_type == 1)
+dat3$Species <- as.factor(dat3$Species)
+
+# dat3 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Effectsize_ID))
 
 VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
@@ -416,6 +421,10 @@ fig.4a <- orchard_plot(res4, mod = "Fertilisation_mode", group = "Study_ID", dat
 
 ```{r,}
 dat4 <- subset(dat, PC_type == 3)
+
+# dat4 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Effectsize_ID))
 
 VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
 
@@ -459,6 +468,10 @@ fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", dat
 
 dat5<- subset(dat, PC_type == 4)
 
+# dat5 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Effectsize_ID))
+
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
 
 m6 <- rma.mv(yi = yi, V = VCV5, 
@@ -485,52 +498,53 @@ m6_MR <- rma.mv(yi = yi, V = VCV5, mod = ~Fertilisation_mode-1,
 summary(m6_MR)
 r2_ml(m6_MR)
 
-res5 <- mod_results(m6_MR, mod = "Fertilisation_mode", data = dat7, group = "Study_ID")
+res5 <- mod_results(m6_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
 
-fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat7, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45))+
   ggtitle("Sperm velocity") +
     geom_signif(comparisons = list(c("internal", "external")),
               annotations = "*")
 ```
 
-### Sperm normality
 
 ```{r}
-dat6<- subset(dat, PC_type == 5)
+### Sperm normality
 
-VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
-
-#removed study ID due to near non-identifiability
-m7 <- rma.mv(yi = yi, V = VCV6, 
-             random = list(~1|Effectsize_ID,
-                          ~1|Species,
-                         ~1|Phylogeny),
-             R=list(Phylogeny = VCV_species),
-             data = dat6)
-
-# summary(m6, transfm = "tanh")
-
-round(i2_ml(m6), 2) 
-
-m7_MR <- rma.mv(yi = yi, V = VCV6, mod = ~Fertilisation_mode-1,  
-              random = list(~1|Effectsize_ID,
-                          ~1|Species,
-                         ~1|Phylogeny),
-             R=list(Phylogeny = VCV_species),
-             test = "t",
-             data = dat6)
-
-summary(m7_MR)
-r2_ml(m7_MR)
-
-res6 <- mod_results(m7_MR, mod = "Fertilisation_mode", data = dat6, group = "Study_ID")
-
-fig.4d <- orchard_plot(res6, mod = "Fertilisation_mode", group = "Effectsize_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
-  theme(axis.text.y = element_text(angle = 45))+
-  ggtitle("Sperm normaility") +
-    geom_signif(comparisons = list(c("internal", "external")),
-              annotations = "*")
+# dat6<- subset(dat, PC_type == 5)
+# 
+# VCV6 <- impute_covariance_matrix(vi = dat6$vi, cluster = dat6$Study_ID, r = 0.5)
+# 
+# #removed study ID due to near non-identifiability
+# m7 <- rma.mv(yi = yi, V = VCV6, 
+#              random = list(~1|Effectsize_ID,
+#                           ~1|Species,
+#                          ~1|Phylogeny),
+#              R=list(Phylogeny = VCV_species),
+#              data = dat6)
+# 
+# # summary(m6, transfm = "tanh")
+# 
+# round(i2_ml(m6), 2) 
+# 
+# m7_MR <- rma.mv(yi = yi, V = VCV6, mod = ~Fertilisation_mode-1,  
+#               random = list(~1|Effectsize_ID,
+#                           ~1|Species,
+#                          ~1|Phylogeny),
+#              R=list(Phylogeny = VCV_species),
+#              test = "t",
+#              data = dat6)
+# 
+# summary(m7_MR)
+# r2_ml(m7_MR)
+# 
+# res6 <- mod_results(m7_MR, mod = "Fertilisation_mode", data = dat6, group = "Study_ID")
+# 
+# fig.4d <- orchard_plot(res6, mod = "Fertilisation_mode", group = "Effectsize_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+#   theme(axis.text.y = element_text(angle = 45))+
+#   ggtitle("Sperm normaility") +
+#     geom_signif(comparisons = list(c("internal", "external")),
+#               annotations = "*")
 ```
 
 ## Publication bias and sensitivity analysis 
