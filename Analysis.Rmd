@@ -977,21 +977,12 @@ write.tree(mytree_spermlength, file = "mytree_spermlength.tre")
 ```{r, eval = FALSE}
 
 Note that most of this figure was manually edited
+
 mytree_spermlength <- read.tree(here("R", "mytree_spermlength.tre"))
 
-# tip_labels <- data.frame(
-#   tip = mytree_spermlength$tip.label,
-#   label = mytree_spermlength$tip.label)
-
-# tip_labels$tip <- gsub('_',' ',tip_labels$tip)
-# tip_labels$label <- gsub('_',' ',tip_labels$label)
 
 plottree <- ggtree(mytree_spermlength) + 
   geom_tiplab(size = 3, hjust = -0.1, align = TRUE)
-
-#can't get ggtree to plot tiplabels
-# plottree <- plottree +
-#   geom_tiplab(data = tip_labels, aes(label = label, x = tip), size = 3, hjust = -0.1, geom = "text", offset = 2)
 
 # plot(plottree)
 dat4$Species <- as.factor(dat4$Species)
@@ -1000,14 +991,72 @@ dat4$Species <- as.factor(dat4$Species)
 dat4_averageeffect <- dat4 %>%
   group_by(Species) %>%
   summarize(mean_zr = mean(yi))
-  
-d1 <- data.frame(id=mytree_spermlength$tip.label, zr=dat4_averageeffect$mean_zr)
 
 #TODO can't figure out how to fit tree into facet
-Figs5 <- facet_plot(plottree, panel="dot", data=d1, geom=geom_point, aes(x=zr), size=2.5) +
+Figs5 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
 
+```
+
+## Fig.S6
+
+```{r, eval = FALSE}
+#creating tree of species that only had sperm velocity
+length(unique(dat5$Species)) #13 species
+dat5$Species <-as.character(dat5$Species)
+
+taxa <- tnrs_match_names(unique(dat5$Species))
+
+taxa[taxa[["ott_id"]] == "3411771", ] #gryllus_bimaculatus 
+dat5$Species[dat5$Species == "Gryllus_bimaculatus"]  <- "Gryllus_bimaculata"
+dat5$Species[dat5$Species == "Xiphophorus_helleri"]  <- "Xiphophorus_hellerii"
+
+taxa <- tnrs_match_names(unique(dat5$Species))
+
+mytree <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+#allocating correct OTTID
+inspect(taxa, taxon_name = "Coregonus_lavaretus")
+taxa <- update(taxa, taxon_name = "Coregonus_lavaretus", new_row_number = 1)
+
+mytree_spermvelocity <- tol_induced_subtree(ott_ids = taxa$ott_id, label_format= "name")
+
+dat5$Species[dat5$Species == "Gryllus_bimaculata"]  <- "Gryllus_bimaculatus"
+
+# changing tip labels
+mytree_spermvelocity$tip.label[mytree_spermvelocity$tip.label == "Sus_scrofa_domesticus"]  <- "Sus_domestica"
+mytree_spermvelocity$tip.label[mytree_spermvelocity$tip.label == "Gadus_morhua_(species_in_domain_Eukaryota)"]  <- "Gadus_morhua"
+mytree_spermvelocity$tip.label[mytree_spermvelocity$tip.label == "Luciobarbus_capito"] <- "Cyprinus_carpio"
+
+sort(setdiff(unique(dat5$Species), as.character(mytree_spermvelocity$tip.label))) # all names match
+
+plot(mytree_spermvelocity, show.tip.label = T, cex = 0.8, no.margin = TRUE)
+# str(mytree)
+
+write.tree(mytree_spermvelocity, file = "mytree_spermvelocity.tre")
+```
+
+```{r}
+
+mytree_spermvelocity <- read.tree(here("R", "mytree_spermvelocity.tre"))
+
+plottree <- ggtree(mytree_spermvelocity) + 
+  geom_tiplab(size = 3, hjust = -0.1, align = TRUE)
+
+# plot(plottree)
+dat5$Species <- as.factor(dat5$Species)
+
+#Taking the average effect size per species
+dat5_averageeffect <- dat5 %>%
+  group_by(Species) %>%
+  summarize(mean_zr = mean(yi))
+
+#TODO can't figure out how to fit tree into facet
+Figs6 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
+  theme(axis.title.x=element_text(size=10),
+        axis.text.x=element_text(size=10)) +
+  geom_vline(xintercept=0) 
 
 ```
