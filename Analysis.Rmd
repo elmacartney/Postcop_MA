@@ -478,9 +478,13 @@ fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", dat
 
 dat5<- subset(dat, PC_type == 4)
 
-# dat5 %>%
-#   group_by(Species) %>%
-#   summarise(n = n_distinct(Effectsize_ID))
+dat5 %>%
+  group_by(Species) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
+dat5 %>%
+  group_by(Species) %>%
+  summarise(n = n_distinct(Study_ID))
 
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
 
@@ -976,7 +980,7 @@ write.tree(mytree_spermlength, file = "mytree_spermlength.tre")
 
 ```{r, eval = FALSE}
 
-Note that most of this figure was manually edited
+#Note that most of this figure was manually edited
 
 mytree_spermlength <- read.tree(here("R", "mytree_spermlength.tre"))
 
@@ -1045,7 +1049,7 @@ mytree_spermvelocity <- read.tree(here("R", "mytree_spermvelocity.tre"))
 plottree <- ggtree(mytree_spermvelocity) + 
   geom_tiplab(size = 3, hjust = -0.1, align = TRUE)
 
-# plot(plottree)
+plot(plottree)
 dat5$Species <- as.factor(dat5$Species)
 
 #Taking the average effect size per species
@@ -1054,7 +1058,7 @@ dat5_averageeffect <- dat5 %>%
   summarize(mean_zr = mean(yi))
 
 #TODO can't figure out how to fit tree into facet
-Figs6 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
+Figs6 <- facet_plot(plottree, panel="dot", data=dat5_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
