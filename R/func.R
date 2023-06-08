@@ -1,11 +1,8 @@
 # functions
 
-# TODO check N
+## Calculating r
 
-
-##########
 # 2 groups
-##########
 
 group2 <- function(m1, m2, sd1, sd2, n1, n2){ # m2 = higher/larger group
   n12 <- n1 + n2
@@ -37,11 +34,9 @@ group2_b<- function(m1, m2, sd1, sd2, N){ # m2 = higher/larger group
   r_b #r_b = r
 }
 
-# test
-#group2(3,5, 2,2, 30, 60)
 
 # 4 groups
-#TODO rep() doesn't work with Nas
+
 group4 <- function(m1, m2, m3, m4, # m1 - smallest & m4 biggest
                    sd1, sd2, sd3, sd4, 
                    n1, n2, n3, n4,
@@ -63,11 +58,7 @@ group4 <- function(m1, m2, m3, m4, # m1 - smallest & m4 biggest
   r
 }
 
-# this takes a while
-# group4(3, 6, 10, 12, 2, 2, 2, 2, 30, 30, 30, 30)
-
 # estimate
-
 est_se <- function(est, se, n1, n2){ # n2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
@@ -79,9 +70,6 @@ est_se <- function(est, se, n1, n2){ # n2 = higher/larger group
   r_b <- r_pb*(sqrt(p*q)/dnorm(qnorm(p)))
   r_b #r_b = r
 }
-
-# test
-#est_se(3,1, 20 ,20)
 
 #adjusting for continuous n and assumed balanced design
 est_se_b<- function(est, se, N){ # n2 = higher/larger group
@@ -98,10 +86,8 @@ est_se_b<- function(est, se, N){ # n2 = higher/larger group
   r_b #r_b = r
 }
 
-# est_se_b(3,1,20)
 
 # t values
-
 t_vals <- function(t, n1, n2){ # n2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
@@ -114,11 +100,7 @@ t_vals <- function(t, n1, n2){ # n2 = higher/larger group
   r_b #r_b = r
 }
 
-# test
-#t_vals(3, 30, 30)
-
 #adjusting for continuous n and assumed balanced design
-
 t_vals_b <- function(t, N){
   n12 <- N
   n1 <- N/2
@@ -134,7 +116,6 @@ t_vals_b <- function(t, N){
 }
 
 # F values (sign required)
-
 F_vals <- function(F_val, n1, n2, reverse = FALSE){ # m2 = higher/larger group
   n12 <- n1 + n2
   #h <- n12/n1 + n12/n2
@@ -149,11 +130,8 @@ F_vals <- function(F_val, n1, n2, reverse = FALSE){ # m2 = higher/larger group
   r_b
 }
 
-# test
-#F_vals(9, 20, 20, reverse = TRUE)
 
 #adjusting for continuous n and assumed balanced design
-
 F_vals_b <- function(F_val, N, reverse = FALSE){
   n12 <- N
   n1 <- N/2
@@ -171,7 +149,6 @@ F_vals_b <- function(F_val, N, reverse = FALSE){
 }
 
 # p value (sign required)
-
 #Don't actually need this function as we got test stats 
 p_vals <- function(p_val, n1, n2, reverse = FALSE){ # n2 = higher/larger group
   n12 <- n1 + n2
@@ -187,9 +164,6 @@ p_vals <- function(p_val, n1, n2, reverse = FALSE){ # n2 = higher/larger group
     r_b = r_b*(-1)}
   r_b
 }
-
-# test
-#p_vals(0.004, 20, 20, reverse = TRUE)
 
 
 p_vals_b <- function(p_val, N, reverse = FALSE){ # n2 = higher/larger group
