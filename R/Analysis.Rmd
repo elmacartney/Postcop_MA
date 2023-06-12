@@ -31,8 +31,6 @@ rm(list = ls())
 # BiocManager::install(version = '3.16')
 # BiocManager::install("ggtree", force = TRUE)
 
-eval(metafor:::.MuMIn)
-
 pacman::p_load(dplyr,
                tidyr,
                readr,
@@ -53,6 +51,9 @@ pacman::p_load(dplyr,
                patchwork,
                clubSandwich,
                MuMIn)
+
+
+eval(metafor:::.MuMIn)
 ```
 
 ## Loading data and functions
@@ -285,13 +286,15 @@ summary(m1)
 
 r2_ml(m1)
 
-res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
+#res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
-fig.3a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", data = dat1, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig.3a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
    scale_colour_manual(values = c("grey34","grey34","grey34","grey34","grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34","grey34","grey34","grey34","grey34"))  + geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
               annotations = "*")
+
+fig.3a
 
 ```
 
@@ -315,15 +318,28 @@ summary(m2)
 
 r2_ml(m2)
 
+m2b <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
+
+summary(m2b) # not signficantly different - TODO (need to get all the contrasts? - Erin)
+
 res2 <- mod_results(m2, mod = "Fertilisation_mode", data = dat, group = "Study_ID")
 
-fig.3b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+fig.3b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
   ylim(-1,1.25) +
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45))+
     geom_signif(comparisons = list(c("Internal", "External")),
               annotations = "*")
+
+fig.3b 
 
 ```
 
@@ -354,13 +370,15 @@ r2_ml(m3)
 
 res3 <- mod_results(m3, mod = "PC_variation_cause2", data = dat2, group = "Study_ID")
 
-fig.3c <- orchard_plot(res3, mod = "PC_variation_cause2", group = "Study_ID", data = dat, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig.3c <- orchard_plot(res3, mod = "PC_variation_cause2", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
     geom_signif(comparisons = list(c("Other", "Experimental selection", "Direct manipulation", "Age", "Environmental plasticity", "Natural")),
               annotations = "*")
+
+fig.3c
 ```
 
 ## Sub-analyses {.tabset}
@@ -412,11 +430,13 @@ r2_ml(m4_MR)
 
 res4 <- mod_results(m4_MR, mod = "Fertilisation_mode", data = dat3, group = "Study_ID")
 
-fig.4a <- orchard_plot(res4, mod = "Fertilisation_mode", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+fig.4a <- orchard_plot(res4, mod = "Fertilisation_mode", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Sperm number') +
     geom_signif(comparisons = list(c("internal", "external")),
               annotations = "*")
+
+fig.4a
 ```
 
 ### Sperm length
@@ -428,7 +448,7 @@ dat4 <- subset(dat, PC_type == 3)
 # dat4 %>%
 #   group_by(Species) %>%
 #   summarise(n = n_distinct(Effectsize_ID))
-
+dat4 %>%
   group_by(Species) %>%
   summarise(n = n_distinct(Study_ID))
 
@@ -464,11 +484,13 @@ r2_ml(m5_MR)
 
 res5 <- mod_results(m5_MR, mod = "Fertilisation_mode", data = dat4, group = "Study_ID")
 
-fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat4, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle("Sperm length") +
     geom_signif(comparisons = list(c("internal", "external")),
               annotations = "*")
+
+fig.4b
 ```
 
 ### Sperm velocity
@@ -516,11 +538,13 @@ r2_ml(m6_MR)
 
 res5 <- mod_results(m6_MR, mod = "Fertilisation_mode", data = dat5, group = "Study_ID")
 
-fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", data = dat5, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45))+
   ggtitle("Sperm velocity") +
     geom_signif(comparisons = list(c("internal", "external")),
               annotations = "*")
+
+fig.4c
 ```
 
 ## Publication bias and sensitivity analysis 
@@ -569,7 +593,7 @@ funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror")
 # small study effect
 dat$sei <- sqrt(dat$vi)
 egger <- rma.mv(yi = yi, V = VCV, 
-             mod = sei,
+             mod = ~sei,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -579,17 +603,20 @@ egger <- rma.mv(yi = yi, V = VCV,
 
 # no statistical evidence for small-study effect
 summary(egger)
+
+#TODO - shinichi - why this does not work - works now
+bubble_plot(egger, mod = "sei", group = "Study_ID", 
+              xlab = "1/SE (N - 3)", ylab = "Effect size (Zr)",)
+
 ```
 
 ### Decline effect
 ```{r}
-#TODO - shinichi - why this does not work
-bubble_plot(egger, mod = "sei", group = "Study_ID", data = dat)
 
 # decline effect
 dat$cYear <- scale(dat$Year_published, center = TRUE, scale = FALSE)
 decline <- rma.mv(yi = yi, V = VCV, 
-             mod = cYear,
+             mod = ~cYear,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -600,9 +627,9 @@ decline <- rma.mv(yi = yi, V = VCV,
 # no statistical evidence for decline effect
 summary(decline)
 
-# TODO this does not work - will get this working 
-mod_results(decline, mod = "cYear", group = "Study_ID", data = dat)
-bubble_plot(decline, mod = "cYear", group = "Study_ID", data = dat)
+# TODO this does not work - will get this working - working now
+bubble_plot(decline, mod = "cYear", group = "Study_ID",
+              xlab = "centered(Publicaiton year)", ylab = "Effect size (Zr)",)
 ```
 
 ### Leave-one-group-out
@@ -628,28 +655,27 @@ for (i in 1:length(levels(dat$leave_out))) {
 }
 
 # writing function for extracting est, ci.lb, and ci.ub from all models
-est.func <- function(m0) {
-    df <- data.frame(est = m0$yi, lower = m0$ci.lb, upper = m0$ci.ub)
+est.func <- function(model) {
+    df <- data.frame(est = model$b, lower = model$ci.lb, upper = model$ci.ub)
     return(df)
 }
 
 # using dplyr to form data frame
-MA_CVR <- lapply(LeaveOneOut_effectsize, function(x) est.func(x)) %>%
+MA_oneout <- lapply(LeaveOneOut_effectsize,function(x) est.func(x)) %>%
     bind_rows %>%
     mutate(left_out = levels(dat$leave_out))
 
-#TODO why isn't this working??
 
 ```
 
 ```{r}
 
 # telling ggplot to stop reordering factors
-MA_CVR$left_out <- as.factor(MA_CVR$left_out)
-MA_CVR$left_out <- factor(MA_CVR$left_out, levels = MA_CVR$left_out)
+MA_oneout$left_out <- as.factor(MA_oneout$left_out)
+MA_oneout$left_out <- factor(MA_oneout$left_out, levels = MA_oneout$left_out)
 
 # plotting
-leaveoneout <- ggplot(MA_CVR) + geom_hline(yintercept = 0, lty = 2, lwd = 1) +
+leaveoneout <- ggplot(MA_oneout) + geom_hline(yintercept = 0, lty = 2, lwd = 1) +
     geom_hline(yintercept = m0$ci.lb, lty = 3, lwd = 0.75, colour = "black") +
     geom_hline(yintercept = m0$b, lty = 1, lwd = 0.75, colour = "black") + geom_hline(yintercept = m0$ci.ub,
     lty = 3, lwd = 0.75, colour = "black") + geom_pointrange(aes(x = left_out, y = est,
@@ -757,7 +783,7 @@ m6_MRc <- rma.mv(yi = yi, V = VCV6c, mod = ~Fertilisation_mode-1,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
              test = "t",
-             data = dat6c)
+             data = dat6)
 
 summary(m6_MRc)
 r2_ml(m6_MRc)
