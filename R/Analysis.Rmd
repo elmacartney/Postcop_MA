@@ -1,9 +1,14 @@
 ---
-title: "Post-cop meta-analysis"
-author: Erin L Macartney, Kyle Morrison, Rhonda Snook, Malgorzata Lagisz, Shinichi
+title: "Ejaculate traits and paternity share under sperm competition: a meta-analysis across species and fertilisation modes"
+author: Erin L Macartney, Kyle Morrison, Rhonda R Snook, Malgorzata Lagisz, Shinichi
   Nakagawa
-date: "2023-05-19"
-output: html_document
+output: 
+    rmdformats::readthedown:
+      code_folding: hide
+      code_download: true
+      toc_depth: 4
+editor_options: 
+  chunk_output_type: consolet
 ---
 
 ```{r, include = FALSE}
@@ -61,7 +66,7 @@ Loading processed data (need to unhash for raw data), phylogenetic tree, and cus
 
 ```{r, message = FALSE}
 #Code for loading raw data
-# dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
+#dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
 
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
@@ -180,7 +185,7 @@ write.csv(df5, "processed_data.csv")
 # Data exploration {.tabset}
 
 ## Sample sizes
-```{r}
+```{r, eval = FALSE}
 # number of effect sizes
 length(unique(dat$Effectsize_ID)) #note that effect_size2 has the effect size flipped so that higher = better
 
@@ -235,7 +240,7 @@ tree$tip.label<- gsub('_',' ',tree$tip.label)
 # sort(setdiff(unique(dat$Phylogeny), as.character(tree$tip.label))) 
 ```
 
-```{r, eval = FALSE}
+```{r}
 branchlength<- compute.brlen(tree, method="Grafen", power=1)
 VCV_species <- vcv(branchlength, corr=TRUE)
 
@@ -286,7 +291,7 @@ summary(m1)
 
 r2_ml(m1)
 
-#res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
+res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
 fig.3a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -448,9 +453,9 @@ dat4 <- subset(dat, PC_type == 3)
 # dat4 %>%
 #   group_by(Species) %>%
 #   summarise(n = n_distinct(Effectsize_ID))
-dat4 %>%
-  group_by(Species) %>%
-  summarise(n = n_distinct(Study_ID))
+# dat4 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Study_ID))
 
 VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
 
@@ -499,13 +504,13 @@ fig.4b
 ```{r}
 dat5<- subset(dat, PC_type == 4)
 
-dat5 %>%
-  group_by(Species) %>%
-  summarise(n = n_distinct(Effectsize_ID))
-
-dat5 %>%
-  group_by(Species) %>%
-  summarise(n = n_distinct(Study_ID))
+# dat5 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Effectsize_ID))
+# 
+# dat5 %>%
+#   group_by(Species) %>%
+#   summarise(n = n_distinct(Study_ID))
 
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
 
@@ -547,7 +552,7 @@ fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", xla
 fig.4c
 ```
 
-## Publication bias and sensitivity analysis 
+## Publication bias and sensitivity analysis {.tabset}
 
 ### Multi-moderator model
 ```{r}
@@ -555,7 +560,7 @@ dat_fm <- subset(dat, PC_type !=2)
 
 VCV_fm <- impute_covariance_matrix(vi = dat_fm$vi, cluster = dat_fm$Study_ID, r = 0.5)
 
-mod_fm <- rma.mv(yi = yi, V = VCV_fm, mod = ~PC_type-1 + Fertilisation_mode + PC_variation_cause2,  
+mod_fm <- rma.mv(yi = yi, V = VCV_fm, mod = ~PC_type-1 + Fertilisation_mode-1 + PC_variation_cause2-1,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -578,7 +583,7 @@ sw(res_fm2)
 ```{r}
 
 # funnel plot
-funnel(m0, xlab = "Zr", ylab = "Standard Eror")
+# funnel(m0, xlab = "Zr", ylab = "Standard Eror")
 
 # funnel plot on full model 
 funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror")
@@ -604,10 +609,6 @@ egger <- rma.mv(yi = yi, V = VCV,
 # no statistical evidence for small-study effect
 summary(egger)
 
-#TODO - shinichi - why this does not work - works now
-bubble_plot(egger, mod = "sei", group = "Study_ID", 
-              xlab = "1/SE (N - 3)", ylab = "Effect size (Zr)",)
-
 ```
 
 ### Decline effect
@@ -615,7 +616,9 @@ bubble_plot(egger, mod = "sei", group = "Study_ID",
 
 # decline effect
 dat$cYear <- scale(dat$Year_published, center = TRUE, scale = FALSE)
-decline <- rma.mv(yi = yi, V = VCV, 
+
+#model doesn't converge with variance VCV so have to use vi
+decline <- rma.mv(yi = yi, V = vi, 
              mod = ~cYear,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
@@ -626,10 +629,6 @@ decline <- rma.mv(yi = yi, V = VCV,
 
 # no statistical evidence for decline effect
 summary(decline)
-
-# TODO this does not work - will get this working - working now
-bubble_plot(decline, mod = "cYear", group = "Study_ID",
-              xlab = "centered(Publicaiton year)", ylab = "Effect size (Zr)",)
 ```
 
 ### Leave-one-group-out
@@ -679,7 +678,7 @@ leaveoneout <- ggplot(MA_oneout) + geom_hline(yintercept = 0, lty = 2, lwd = 1) 
     geom_hline(yintercept = m0$ci.lb, lty = 3, lwd = 0.75, colour = "black") +
     geom_hline(yintercept = m0$b, lty = 1, lwd = 0.75, colour = "black") + geom_hline(yintercept = m0$ci.ub,
     lty = 3, lwd = 0.75, colour = "black") + geom_pointrange(aes(x = left_out, y = est,
-    ymin = lower, ymax = upper)) + xlab("Study left out") + ylab("lnRR, 95% CI") +
+    ymin = lower, ymax = upper)) + xlab("Study left out") + ylab("Zr, 95% CI") +
     coord_flip() + theme(panel.grid.minor = element_blank()) + theme_bw() + theme(panel.grid.major = element_blank()) +
     theme(panel.grid.minor.x = element_blank()) + theme(axis.text.y = element_text(size = 6))
 
@@ -690,7 +689,7 @@ leaveoneout
 ### Analysing total sperm length only {.tabset}
 
 #### Global model
-```{r, results='hide', message = FALSE, warning=FALSE}
+```{r, message = FALSE, warning=FALSE}
 #reducing the dataframe so that only the effect sizes of total sperm length are included
 dat$PC_type_notes <- as.factor(dat$PC_type_notes)
 
@@ -793,6 +792,7 @@ r2_ml(m6_MRc)
 # Figures {.tabset}
 
 ## Fig. 1
+Note that this was mostly edited outside of R
 ```{r}
 
 sample_data <- count(dat, Species)
@@ -868,6 +868,7 @@ Fig.2
 ```{r,}
 
 Fig.3 <- (fig.3a/fig.3b/fig.3c)+ plot_annotation(tag_levels = 'A')
+
 Fig.3
 ```
 
@@ -921,6 +922,7 @@ Fig.S4
 ```
 
 ## Fig.S5
+Note that most of this figure was manually edited outside of R
 ``` {r, eval = FALSE}
 #creating tree of species that only had sperm length
 length(unique(dat4$Species)) #12 species
@@ -958,11 +960,7 @@ write.tree(mytree_spermlength, file = "mytree_spermlength.tre")
 ```
 
 ```{r, eval = FALSE}
-
-#Note that most of this figure was manually edited
-
 mytree_spermlength <- read.tree(here("R", "mytree_spermlength.tre"))
-
 
 plottree <- ggtree(mytree_spermlength) + 
   geom_tiplab(size = 3, hjust = -0.1, align = TRUE)
@@ -975,15 +973,17 @@ dat4_averageeffect <- dat4 %>%
   group_by(Species) %>%
   summarize(mean_zr = mean(yi))
 
-#TODO can't figure out how to fit tree into facet
 Figs5 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
 
+Figs5
+
 ```
 
 ## Fig.S6
+Note that most of this figure was manually edited outside of R
 ```{r, eval = FALSE}
 #creating tree of species that only had sperm velocity
 length(unique(dat5$Species)) #13 species
@@ -1035,10 +1035,29 @@ dat5_averageeffect <- dat5 %>%
   group_by(Species) %>%
   summarize(mean_zr = mean(yi))
 
-#TODO can't figure out how to fit tree into facet
 Figs6 <- facet_plot(plottree, panel="dot", data=dat5_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
 
+Figs6
+
+```
+
+## Fig.S7
+```{r,}
+
+bubble_plot(egger, mod = "sei", group = "Study_ID", 
+              xlab = "1/SE (N - 3)", ylab = "Effect size (Zr)", data = dat)
+```
+
+## Fig.S8
+```{r,}
+bubble_plot(decline, mod = "cYear", group = "Study_ID",
+              xlab = "Centred (Publicaiton year)", ylab = "Effect size (Zr)",data = dat)
+```
+
+## Fig.S9
+```{r,}
+leaveoneout
 ```
