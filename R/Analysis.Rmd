@@ -586,9 +586,8 @@ sw(res_fm2)
 # funnel(m0, xlab = "Zr", ylab = "Standard Eror")
 
 # funnel plot on full model 
-funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror")
+funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror", yaxis = "seinv")
 
-#I've added the full model - it looks a bit strange
 
 ```
 
@@ -791,9 +790,10 @@ r2_ml(m6_MRc)
 
 # Figures {.tabset}
 
-## Fig. 1
+## Fig.1
 Note that this was mostly edited outside of R
 ```{r}
+#TODO not sure why this code has stopped working?
 
 sample_data <- count(dat, Species)
 sample_data <- as.data.frame(sample_data)
@@ -880,22 +880,49 @@ Fig.4
 
 ```
 
+## Fig.5
+```{r}
+funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror", yaxis = "seinv")
+```
+
 ## Fig.S3
+```{r}
+
+freq1 <- as.data.frame(table(dat$Fertilisation_mode, dat$PC_type, dat$PC_variation_cause2)) %>%
+  rename("Fertilisation_mode" = Var1, "Trait" = Var2, "Variation_cause" = Var3)
+
+levels(freq1$Fertilisation_mode) <- list("internal" = "1", "external" = "2")
+
+levels(freq1$Trait) <- list("sperm number" = "1","testis size" = "2", "sperm length" = "3", "sperm velocity" = "4", "sperm normality" = "5", "total ejaculate size" = "6", "seminal fluid quantity" = "7", "accessory gland size" = "8")
+
+levels(freq1$Variation_cause) <- list("genetic + environment" = "1", "environmental plasticity" = "2", "age" = "3", "direct manipulation" = "4", "artificial selcetion" = "5", "unclear/other" = "6")
+
+FigS3 <- ggplot(data = freq1, aes(axis1 = Fertilisation_mode, axis2 = Trait, axis3 = Variation_cause, y = Freq)) +
+    geom_alluvium(aes(fill = Fertilisation_mode)) + geom_flow() + geom_stratum(aes(fill = Fertilisation_mode)) +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + geom_text(stat
+    geom_text(stat = "stratum", aes(label = after_stat(stratum))) + #theme_minimal() + +
+theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0,
+    vjust = 3), axis.title.x = element_text(), axis.text.x = element_text(face = "bold"),
+    plot.margin = unit(c(1, 1, 0, 1), "cm")) + scale_x_discrete(limits = c("Fertilisation mode", "Postcopulatory trait", "Variation cause"), expand = c(0.15, 0.05), position = "top") 
+```
+
+## Fig.S4
 ```{r}
 res0 <- mod_results(m0a, mod = "1", data = dat_SLtotal, group = "Study_ID")
 
-FigS3 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
+FigS4 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
                     group = "Study_ID", alpha=0.4, transfm = "tanh") +
   scale_colour_manual(values = c("grey34")) +
   scale_fill_manual(values=c("grey34")) 
 
+FigS4
 ```
 
-## Fig.S4
+## Fig.S5
 ```{r, message=FALSE}
 res1a <- mod_results(m1a, mod = "PC_type", data = dat_SLtotala, group = "Study_ID")
 
-figS4a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+figS5a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory trait as a moderator in global model') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -903,7 +930,7 @@ figS4a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_S
 
 res2a <- mod_results(m2a, mod = "Fertilisation_mode", data = dat_SLtotal, group = "Study_ID")
 
-figS4b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", data = dat_SLtotal, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+figS5b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", data = dat_SLtotal, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -913,15 +940,15 @@ figS4b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", da
 
 res3a <- mod_results(m6_MRc, mod = "Fertilisation_mode", data = dat6, group = "Study_ID")
 
-figS4c <- orchard_plot(res3a, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+figS5c <- orchard_plot(res3a, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Sperm length sub-analysis')
 
-Fig.S4 <- (figS4a/figS4b/figS4c) + plot_annotation(tag_levels = 'A')
-Fig.S4
+Fig.S5 <- (figS5a/figS5b/figS5c) + plot_annotation(tag_levels = 'A')
+Fig.S5
 ```
 
-## Fig.S5
+## Fig.S6
 Note that most of this figure was manually edited outside of R
 ``` {r, eval = FALSE}
 #creating tree of species that only had sperm length
@@ -973,16 +1000,16 @@ dat4_averageeffect <- dat4 %>%
   group_by(Species) %>%
   summarize(mean_zr = mean(yi))
 
-Figs5 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
+Figs6 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
 
-Figs5
+Figs6
 
 ```
 
-## Fig.S6
+## Fig.S7
 Note that most of this figure was manually edited outside of R
 ```{r, eval = FALSE}
 #creating tree of species that only had sperm velocity
@@ -1035,29 +1062,29 @@ dat5_averageeffect <- dat5 %>%
   group_by(Species) %>%
   summarize(mean_zr = mean(yi))
 
-Figs6 <- facet_plot(plottree, panel="dot", data=dat5_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
+Figs7 <- facet_plot(plottree, panel="dot", data=dat5_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
 
-Figs6
+Figs7
 
 ```
 
-## Fig.S7
+## Fig.S8
 ```{r,}
 
 bubble_plot(egger, mod = "sei", group = "Study_ID", 
               xlab = "1/SE (N - 3)", ylab = "Effect size (Zr)", data = dat)
 ```
 
-## Fig.S8
+## Fig.S9
 ```{r,}
 bubble_plot(decline, mod = "cYear", group = "Study_ID",
               xlab = "Centred (Publicaiton year)", ylab = "Effect size (Zr)",data = dat)
 ```
 
-## Fig.S9
+## Fig.S10
 ```{r,}
 leaveoneout
 ```
