@@ -225,6 +225,13 @@ dat %>%
   group_by(PC_variation_cause2) %>%
   summarise(n = n_distinct(Effectsize_ID))
 
+#focal male_internal fertilisation
+dat_int <- subset(dat, Fertilisation_mode == 1)
+
+dat_int %>%
+  group_by(Competition_order) %>%
+  summarise(n = n_distinct(Effectsize_ID))
+
 ```
 
 # Analysis {.tabset}
