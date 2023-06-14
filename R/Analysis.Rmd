@@ -70,6 +70,7 @@ Loading processed data (need to unhash for raw data), phylogenetic tree, and cus
 
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
+source(here("R/contrast_analysis.R"))
 tree <- read.tree(here("R", "species_tree.tre")) #loading phylogenetic tree
 ```
 
@@ -353,6 +354,18 @@ fig.3b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", xla
 
 fig.3b 
 
+```
+
+#### Contrast
+
+``` {r,}
+
+contra_fert <- contrast_fun(data = dat, response = yi, moderator = Fertilisation_mode,
+    VCV = VCV)
+
+res_table_mod <- get_estimate(model = m2b, contra = contra_fert, moderator = Fertilisation_mode)
+
+res_table_mod
 ```
 
 ### Trait variation cause
