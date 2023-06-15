@@ -265,7 +265,7 @@ m0 <- rma.mv(yi = yi, V = VCV,
              data = dat)
 
 summary(m0, transfm = "tanh") 
-round(i2_ml(m0), 2) 
+i2_ml(m0,data=dat, boot = 10) 
 
 ```
 
@@ -430,6 +430,8 @@ m4 <- rma.mv(yi = yi, V = VCV3,
 # summary(m4, transfm = "tanh")
 
 round(i2_ml(m4), 2)
+
+i2_ml(m4, data =  dat3, boot = 10)
 ```
 
 #### Fertilisation mode meta-regression
@@ -600,6 +602,17 @@ fig.4c
 
 ```{r,}
 
+m6_MRb <- rma.mv(yi = yi, V = VCV5, mod = ~Fertilisation_mode,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat5)
+
+summary(m6_MRb)
+
 ```
 
 ## Publication bias and sensitivity analysis {.tabset}
@@ -636,7 +649,7 @@ sw(res_fm2)
 # funnel(m0, xlab = "Zr", ylab = "Standard Eror")
 
 # funnel plot on full model 
-funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror", yaxis = "seinv")
+funnel(mod_fm, xlab = "Residuals (Zr(", ylab = "Inverse standard Eror", yaxis = "seinv")
 
 
 ```
