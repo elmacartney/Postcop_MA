@@ -331,17 +331,6 @@ summary(m2)
 
 r2_ml(m2)
 
-m2b <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,  
-             random = list(~1|Study_ID,
-                          ~1|Effectsize_ID,
-                          ~1|Species,
-                         ~1|Phylogeny),
-             R=list(Phylogeny = VCV_species),
-             test = "t",
-             data = dat)
-
-summary(m2b) # not signficantly different - TODO (need to get all the contrasts? - Erin)
-
 res2 <- mod_results(m2, mod = "Fertilisation_mode", data = dat, group = "Study_ID")
 
 fig.3b <- orchard_plot(res2, mod = "Fertilisation_mode", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
@@ -359,13 +348,17 @@ fig.3b
 #### Contrast
 
 ``` {r,}
+m2b <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat)
 
-contra_fert <- contrast_fun(data = dat, response = yi, moderator = Fertilisation_mode,
-    VCV = VCV)
+summary(m2b) # not signficantly different
 
-res_table_mod <- get_estimate(model = m2b, contra = contra_fert, moderator = Fertilisation_mode)
-
-res_table_mod
 ```
 
 ### Trait variation cause
@@ -464,6 +457,21 @@ fig.4a <- orchard_plot(res4, mod = "Fertilisation_mode", group = "Study_ID", xla
 fig.4a
 ```
 
+##### Contrast
+
+```{r,}
+m4_MRb <- rma.mv(yi = yi, V = VCV3, mod = ~Fertilisation_mode,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat3)
+
+summary(m4_MRb)
+```
+
 ### Sperm length
 
 #### Global model
@@ -518,6 +526,22 @@ fig.4b <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", xla
 fig.4b
 ```
 
+##### Contrast
+
+```{r,}
+m5_MRb <- rma.mv(yi = yi, V = VCV4, mod = ~Fertilisation_mode,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat4)
+
+summary(m5_MRb)
+
+```
+
 ### Sperm velocity
 
 #### Global model
@@ -570,6 +594,12 @@ fig.4c <- orchard_plot(res5, mod = "Fertilisation_mode", group = "Study_ID", xla
               annotations = "*")
 
 fig.4c
+```
+
+##### Contrast
+
+```{r,}
+
 ```
 
 ## Publication bias and sensitivity analysis {.tabset}
