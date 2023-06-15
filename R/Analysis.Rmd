@@ -420,6 +420,7 @@ dat3$Species <- as.factor(dat3$Species)
 VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
 m4 <- rma.mv(yi = yi, V = VCV3, 
+             mod = ~ 1, # TODO - added - you need to add this elsewhere
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -431,7 +432,7 @@ m4 <- rma.mv(yi = yi, V = VCV3,
 
 round(i2_ml(m4), 2)
 
-# i2_ml(m4, data =  dat3, boot = 10)
+i2_ml(m4, data =  dat3 , boot = 10)
 ```
 
 #### Fertilisation mode meta-regression
