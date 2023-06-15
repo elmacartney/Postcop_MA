@@ -265,7 +265,7 @@ m0 <- rma.mv(yi = yi, V = VCV,
              data = dat)
 
 summary(m0, transfm = "tanh") 
-i2_ml(m0,data=dat, boot = 10) 
+# i2_ml(m0,data=dat, boot = 10) 
 
 ```
 
@@ -431,7 +431,7 @@ m4 <- rma.mv(yi = yi, V = VCV3,
 
 round(i2_ml(m4), 2)
 
-i2_ml(m4, data =  dat3, boot = 10)
+# i2_ml(m4, data =  dat3, boot = 10)
 ```
 
 #### Fertilisation mode meta-regression
@@ -914,16 +914,8 @@ Fig.2 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)",
   scale_colour_manual(values = c("grey34")) +
   scale_fill_manual(values=c("grey34")) 
 
-  # geom_errorbarh(data = res0, aes(xmin = lowerPR, xmax = upperPR), 
-  #     height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5) +
-  # geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), 
-  #     height = 0.05, show.legend = FALSE, size = 2)　+
-  # geom_point(aes(fill = name), shape = 21)+
-  # scale_size_continuous(range = c(1, 7))+
-  # theme(panel.border = element_rect(colour = "black", fill=NA))
-
-# #TODO previous code to modify oarchard plot no longer works
 Fig.2
+#exported as landscape 4 x 5
 ```
 
 
@@ -933,6 +925,7 @@ Fig.2
 Fig.3 <- (fig.3a/fig.3b/fig.3c)+ plot_annotation(tag_levels = 'A')
 
 Fig.3
+#exported as portrain 10 x 20
 ```
 
 ## Fig.4
@@ -941,11 +934,14 @@ Fig.3
 Fig.4 <- (fig.4a / fig.4b/fig.4c) + plot_annotation(tag_levels = 'A')
 Fig.4
 
+#exported as portrain 1- x 20
 ```
 
 ## Fig.5
 ```{r}
-funnel(mod_fm, xlab = "Zr", ylab = "Standard Eror", yaxis = "seinv")
+funnel(mod_fm, xlab = "Residuals (Zr)", ylab = "Inverse standard Eror", yaxis = "seinv")
+
+#Exported as portrait 4 x 5
 ```
 
 ## Fig.S3
