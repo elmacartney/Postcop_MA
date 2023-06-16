@@ -420,7 +420,7 @@ dat3$Species <- as.factor(dat3$Species)
 VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
 m4 <- rma.mv(yi = yi, V = VCV3, 
-             mod = ~ 1, # TODO - added - you need to add this elsewhere
+             mod = ~ 1, 
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -432,7 +432,7 @@ m4 <- rma.mv(yi = yi, V = VCV3,
 
 round(i2_ml(m4), 2)
 
-i2_ml(m4, data =  dat3 , boot = 10)
+i2_ml(m4, data =  dat3 , boot = 50)
 ```
 
 #### Fertilisation mode meta-regression
@@ -491,6 +491,7 @@ dat4 <- subset(dat, PC_type == 3)
 VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
 
 m5 <- rma.mv(yi = yi, V = VCV4, 
+             mod = ~ 1,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -501,6 +502,7 @@ m5 <- rma.mv(yi = yi, V = VCV4,
 # summary(m5, transfm = "tanh")
 
 round(i2_ml(m5), 2) 
+i2_ml(m5, data =  dat4, boot = 100)
 ```
 
 #### Fertilisation mode meta-regression
@@ -562,6 +564,7 @@ dat5<- subset(dat, PC_type == 4)
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
 
 m6 <- rma.mv(yi = yi, V = VCV5, 
+             mod = ~ 1,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -572,6 +575,7 @@ m6 <- rma.mv(yi = yi, V = VCV5,
 # summary(m6, transfm = "tanh")
 
 round(i2_ml(m6), 2)
+i2_ml(m6, data =  dat5, boot = 1000)
 ```
 
 #### Fertilisation mode meta-regression
