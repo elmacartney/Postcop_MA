@@ -265,7 +265,7 @@ m0 <- rma.mv(yi = yi, V = VCV,
              data = dat)
 
 summary(m0, transfm = "tanh") 
-# i2_ml(m0,data=dat, boot = 10) 
+i2_ml(m0,data=dat, boot = 10) 
 
 ```
 
@@ -420,7 +420,6 @@ dat3$Species <- as.factor(dat3$Species)
 VCV3 <- impute_covariance_matrix(vi = dat3$vi, cluster = dat3$Study_ID, r = 0.5)
 
 m4 <- rma.mv(yi = yi, V = VCV3, 
-             mod = ~ 1, 
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -432,7 +431,7 @@ m4 <- rma.mv(yi = yi, V = VCV3,
 
 round(i2_ml(m4), 2)
 
-i2_ml(m4, data =  dat3 , boot = 50)
+i2_ml(m4, data =  dat3, boot = 10)
 ```
 
 #### Fertilisation mode meta-regression
@@ -491,7 +490,6 @@ dat4 <- subset(dat, PC_type == 3)
 VCV4 <- impute_covariance_matrix(vi = dat4$vi, cluster = dat4$Study_ID, r = 0.5)
 
 m5 <- rma.mv(yi = yi, V = VCV4, 
-             mod = ~ 1,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -502,7 +500,6 @@ m5 <- rma.mv(yi = yi, V = VCV4,
 # summary(m5, transfm = "tanh")
 
 round(i2_ml(m5), 2) 
-i2_ml(m5, data =  dat4, boot = 100)
 ```
 
 #### Fertilisation mode meta-regression
@@ -564,7 +561,6 @@ dat5<- subset(dat, PC_type == 4)
 VCV5 <- impute_covariance_matrix(vi = dat5$vi, cluster = dat5$Study_ID, r = 0.5)
 
 m6 <- rma.mv(yi = yi, V = VCV5, 
-             mod = ~ 1,
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
@@ -575,7 +571,6 @@ m6 <- rma.mv(yi = yi, V = VCV5,
 # summary(m6, transfm = "tanh")
 
 round(i2_ml(m6), 2)
-i2_ml(m6, data =  dat5, boot = 1000)
 ```
 
 #### Fertilisation mode meta-regression
@@ -654,7 +649,7 @@ sw(res_fm2)
 # funnel(m0, xlab = "Zr", ylab = "Standard Eror")
 
 # funnel plot on full model 
-funnel(mod_fm, xlab = "Residuals (Zr(", ylab = "Inverse standard Eror", yaxis = "seinv")
+funnel(mod_fm, xlab = "Residuals (Zr(", ylab = "Inverse standard error", yaxis = "seinv")
 
 
 ```
@@ -919,8 +914,16 @@ Fig.2 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)",
   scale_colour_manual(values = c("grey34")) +
   scale_fill_manual(values=c("grey34")) 
 
+  # geom_errorbarh(data = res0, aes(xmin = lowerPR, xmax = upperPR), 
+  #     height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5) +
+  # geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), 
+  #     height = 0.05, show.legend = FALSE, size = 2)　+
+  # geom_point(aes(fill = name), shape = 21)+
+  # scale_size_continuous(range = c(1, 7))+
+  # theme(panel.border = element_rect(colour = "black", fill=NA))
+
+# #TODO previous code to modify oarchard plot no longer works
 Fig.2
-#exported as landscape 4 x 5
 ```
 
 
@@ -930,7 +933,6 @@ Fig.2
 Fig.3 <- (fig.3a/fig.3b/fig.3c)+ plot_annotation(tag_levels = 'A')
 
 Fig.3
-#exported as portrain 10 x 20
 ```
 
 ## Fig.4
@@ -939,14 +941,6 @@ Fig.3
 Fig.4 <- (fig.4a / fig.4b/fig.4c) + plot_annotation(tag_levels = 'A')
 Fig.4
 
-#exported as portrain 1- x 20
-```
-
-## Fig.5
-```{r}
-funnel(mod_fm, xlab = "Residuals (Zr)", ylab = "Inverse standard Eror", yaxis = "seinv")
-
-#Exported as portrait 4 x 5
 ```
 
 ## Fig.S3
@@ -1136,19 +1130,25 @@ Figs7
 ```
 
 ## Fig.S8
+```{r}
+funnel(mod_fm, xlab = "Zr", ylab = "Standard error", yaxis = "seinv")
+```
+
+
+## Fig.S9
 ```{r,}
 
 bubble_plot(egger, mod = "sei", group = "Study_ID", 
               xlab = "1/SE (N - 3)", ylab = "Effect size (Zr)", data = dat)
 ```
 
-## Fig.S9
+## Fig.S10
 ```{r,}
 bubble_plot(decline, mod = "cYear", group = "Study_ID",
               xlab = "Centred (Publicaiton year)", ylab = "Effect size (Zr)",data = dat)
 ```
 
-## Fig.S10
+## Fig.S11
 ```{r,}
 leaveoneout
 ```
