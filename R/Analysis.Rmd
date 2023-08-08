@@ -66,7 +66,7 @@ Loading processed data (need to unhash for raw data), phylogenetic tree, and cus
 
 ```{r, message = FALSE}
 #Code for loading raw data
-#dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
+# dat <- read_csv(here("Data", "Data_raw.csv")) #raw data was used for data processing below
 
 dat <- read_csv(here("Data", "processed_data.csv"))
 source(here("R/func.R")) #functions for converting other statistics into correlations
