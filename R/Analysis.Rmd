@@ -265,6 +265,8 @@ m0 <- rma.mv(yi = yi, V = VCV,
              R=list(Phylogeny = VCV_species),
              data = dat)
 
+summary(m0)
+
 i2_ml(m0,data=dat, boot = 1000) 
 
 ```
