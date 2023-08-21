@@ -304,6 +304,7 @@ r2_ml(m1)
 res1 <- mod_results(m1, mod = "PC_type", data = dat1, group = "Study_ID")
 
 fig.3a <- orchard_plot(res1 , mod = "PC_type", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+  ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
    scale_colour_manual(values = c("grey34","grey34","grey34","grey34","grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34","grey34","grey34","grey34","grey34"))  + geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -391,6 +392,7 @@ r2_ml(m3)
 res3 <- mod_results(m3, mod = "PC_variation_cause2", data = dat2, group = "Study_ID")
 
 fig.3c <- orchard_plot(res3, mod = "PC_variation_cause2", group = "Study_ID", xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+  ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   scale_colour_manual(values = c("grey34","grey34", "grey34","grey34", "grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34", "grey34","grey34", "grey34","grey34"))  +
@@ -919,18 +921,11 @@ res0 <- mod_results(m0, mod = "1", data = dat, group = "Study_ID")
 
 Fig.2 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)", 
                     group = "Study_ID", alpha=0.4, transfm = "tanh") +
+  ylim(-1,1.25) +
   scale_colour_manual(values = c("grey34")) +
   scale_fill_manual(values=c("grey34")) 
 
-  # geom_errorbarh(data = res0, aes(xmin = lowerPR, xmax = upperPR), 
-  #     height = 0, show.legend = FALSE, size = 1.1, alpha = 0.5) +
-  # geom_errorbarh(aes(xmin = lowerCL, xmax = upperCL), 
-  #     height = 0.05, show.legend = FALSE, size = 2)　+
-  # geom_point(aes(fill = name), shape = 21)+
-  # scale_size_continuous(range = c(1, 7))+
-  # theme(panel.border = element_rect(colour = "black", fill=NA))
 
-# #TODO previous code to modify oarchard plot no longer works
 Fig.2
 ```
 
