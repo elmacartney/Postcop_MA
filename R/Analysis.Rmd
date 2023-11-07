@@ -911,6 +911,18 @@ m_fisha <- rma.mv(yi = yi, V = VCV_fisha, mod = ~PC_type-1,
 
 summary(m_fisha)
 r2_ml(m_fisha)
+
+#contrast
+m_fish_contrasta <- rma.mv(yi = yi, V = VCV_fisha, mod = ~PC_type,  
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_Classa)
+
+summary(m_fish_contrasta)
 ```
 
 #### Fertilisation mode
@@ -935,16 +947,16 @@ summary(m_fishb)
 r2_ml(m_fishb)
 
 #contrast
-m_fish_contrast <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,  
+m_fish_contrastb <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,  
              random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
              test = "t",
-             data = dat)
+             data = dat_Class)
 
-summary(m_fish_contrast)
+summary(m_fish_contrastb)
 ```
 
 ##### Sperm number sub-analysis with fertilisation mode as moderator
@@ -966,6 +978,19 @@ m_fish_number <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,
 
 summary(m_fish_number)
 r2_ml(m_fish_number)
+
+#contrast
+#model doesn't converge
+# m_fish_contrastc <- rma.mv(yi = yi, V = vi, mod = ~Fertilisation_mode,  
+#              random = list(~1|Study_ID,
+#                           ~1|Effectsize_ID,
+#                           ~1|Species,
+#                          ~1|Phylogeny),
+#              R=list(Phylogeny = VCV_species),
+#              test = "t",
+#              data = dat_class_number)
+# 
+# summary(m_fish_contrastc)
 ```
 
 ##### Sperm length sub-analysis with fertilisation mode as moderator
@@ -987,6 +1012,18 @@ m_fish_length <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,
 
 summary(m_fish_length)
 r2_ml(m_fish_length)
+
+#contrast
+m_fish_contrastd <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_class_length)
+
+summary(m_fish_contrastd)
 ```
 
 ##### Sperm velocity sub-analysis with fertilisation mode as moderator
@@ -1008,6 +1045,18 @@ m_fish_velocity <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,
 
 summary(m_fish_velocity)
 r2_ml(m_fish_velocity)
+
+#contrast
+m_fish_contraste <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_class_velocity)
+
+summary(m_fish_contraste)
 ```
 
 # Figures {.tabset}
