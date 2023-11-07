@@ -861,7 +861,7 @@ r2_ml(m_fisha)
 
 res_fisha <- mod_results(m_fisha, mod = "PC_type", data = dat_Classa, group = "Study_ID")
 
-fig <- orchard_plot(res_fisha, mod = "PC_type", group = "Study_ID", data = dat_Classa, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+fig_fisha <- orchard_plot(res_fisha, mod = "PC_type", group = "Study_ID", data = dat_Classa, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory trait as a moderator in fish sub-analysis') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -950,7 +950,7 @@ m_fish_length <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,
 summary(m_fish_length)
 r2_ml(m_fish_length)
 
-res_fish_length <- mod_results(m_fish_length, mod = "Fertilisation_mode", data = dat_class_number, group = "Study_ID")
+res_fish_length <- mod_results(m_fish_length, mod = "Fertilisation_mode", data = dat_class_length, group = "Study_ID")
 
 fig <- orchard_plot(res_fish_length, mod = "Fertilisation_mode", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -962,28 +962,28 @@ fig <- orchard_plot(res_fish_length, mod = "Fertilisation_mode", group = "Study_
 ##### Sperm velocity sub-analysis with fertilisation mode as moderator
 
 ```{r,}
-dat_class_length <- subset(dat_Class, PC_type == 3)
+dat_class_velocity <- subset(dat_Class, PC_type == 4)
 
-VCV<- impute_covariance_matrix(vi = dat_class_length$vi, cluster = dat_class_length$Study_ID, r = 0.5)
+VCV<- impute_covariance_matrix(vi = dat_class_velocity$vi, cluster = dat_class_velocity$Study_ID, r = 0.5)
 
 #including fert mode as a moderator
-m_fish_length <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
+m_fish_velocity <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
               random = list(~1|Study_ID,
                           ~1|Effectsize_ID,
                           ~1|Species,
                          ~1|Phylogeny),
              R=list(Phylogeny = VCV_species),
              test = "t",
-             data = dat_class_length)
+             data = dat_class_velocity)
 
-summary(m_fish_length)
-r2_ml(m_fish_length)
+summary(m_fish_velocity)
+r2_ml(m_fish_velocity)
 
-res_fish_length <- mod_results(m_fish_length, mod = "Fertilisation_mode", data = dat_class_number, group = "Study_ID")
+res_fish_velocity <- mod_results(m_fish_velocity, mod = "Fertilisation_mode", data = dat_class_velocity, group = "Study_ID")
 
-fig <- orchard_plot(res_fish_length, mod = "Fertilisation_mode", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+fig <- orchard_plot(res_fish_velocity, mod = "Fertilisation_mode", group = "Study_ID", data = dat3, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
-  ggtitle('Sperm length') +
+  ggtitle('Sperm velocity') +
     geom_signif(comparisons = list(c("internal", "external")),
               annotations = "*")
 ```
@@ -1091,11 +1091,11 @@ FigS3 <- orchard_plot(res0, mod = "1", xlab = "Correlation (r)",
 
 ```
 
-## Fig.S4
+## Fig.S5
 ```{r, message=FALSE}
 res1a <- mod_results(m1a, mod = "PC_type", data = dat_SLtotala, group = "Study_ID")
 
-figS4a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
+figS5a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_SLtotala, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh") +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Post-copulatory trait as a moderator in global model') +
     geom_signif(comparisons = list(c("Seminal fluid quantity", "Total ejaculate size", "Sperm normality", "Sperm velocity", "Sperm length", "Sperm number")),
@@ -1103,7 +1103,7 @@ figS4a <- orchard_plot(res1a , mod = "PC_type", group = "Study_ID", data = dat_S
 
 res2a <- mod_results(m2a, mod = "Fertilisation_mode", data = dat_SLtotal, group = "Study_ID")
 
-figS4b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", data = dat_SLtotal, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
+figS5b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", data = dat_SLtotal, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+
   scale_colour_manual(values = c("grey34","grey34")) +
   scale_fill_manual(values=c("grey34","grey34"))  +
   theme(axis.text.y = element_text(angle = 45)) +
@@ -1113,15 +1113,15 @@ figS4b <- orchard_plot(res2a, mod = "Fertilisation_mode", group = "Study_ID", da
 
 res3a <- mod_results(m6_MRc, mod = "Fertilisation_mode", data = dat6, group = "Study_ID")
 
-figS4c <- orchard_plot(res3a, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
+figS5c <- orchard_plot(res3a, mod = "Fertilisation_mode", group = "Study_ID", data = dat6, xlab = "Correlation (r)", alpha=0.4, transfm = "tanh")+ ylim(-1,1.25) +
   theme(axis.text.y = element_text(angle = 45)) +
   ggtitle('Sperm length sub-analysis')
 
-Fig.S4 <- (figS4a/figS4b/figS4c) + plot_annotation(tag_levels = 'A')
-Fig.S4
+Fig.S5 <- (figS5a/figS5b/figS5c) + plot_annotation(tag_levels = 'A')
+Fig.S5
 ```
 
-## Fig.S5
+## Fig.S7
 
 ``` {r, eval = FALSE}
 #creating tree of species that only had sperm length
@@ -1177,15 +1177,15 @@ dat4_averageeffect <- dat4 %>%
   group_by(Species) %>%
   summarize(mean_zr = mean(yi))
 
-#TODO can't figure out how to fit tree into facet
-Figs5 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
+
+Figs7 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
 
 ```
 
-## Fig.S6
+## Fig.S8
 
 ```{r, eval = FALSE}
 #creating tree of species that only had sperm velocity
@@ -1239,7 +1239,7 @@ dat5_averageeffect <- dat5 %>%
   summarize(mean_zr = mean(yi))
 
 #TODO can't figure out how to fit tree into facet
-Figs6 <- facet_plot(plottree, panel="dot", data=dat5_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
+Figs8 <- facet_plot(plottree, panel="dot", data=dat5_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
   geom_vline(xintercept=0) 
