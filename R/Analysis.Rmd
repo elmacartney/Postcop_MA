@@ -966,6 +966,20 @@ dat_class_number <- subset(dat_Class, PC_type == 1)
 
 VCV<- impute_covariance_matrix(vi = dat_class_number$vi, cluster = dat_class_number$Study_ID, r = 0.5)
 
+m_fish_number1 <- rma.mv(yi = yi, V = VCV,  
+              random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_class_number)
+
+# summary(m4, transfm = "tanh")
+
+round(i2_ml(m_fish_number1), 2)
+
+
 #including fert mode as a moderator
 m_fish_number <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
               random = list(~1|Study_ID,
@@ -1000,6 +1014,17 @@ dat_class_length <- subset(dat_Class, PC_type == 3)
 
 VCV<- impute_covariance_matrix(vi = dat_class_length$vi, cluster = dat_class_length$Study_ID, r = 0.5)
 
+m_fish_length1 <- rma.mv(yi = yi, V = VCV,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_class_length)
+
+round(i2_ml(m_fish_length1), 2)
+
 #including fert mode as a moderator
 m_fish_length <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
               random = list(~1|Study_ID,
@@ -1032,6 +1057,17 @@ summary(m_fish_contrastd)
 dat_class_velocity <- subset(dat_Class, PC_type == 4)
 
 VCV<- impute_covariance_matrix(vi = dat_class_velocity$vi, cluster = dat_class_velocity$Study_ID, r = 0.5)
+
+m_fish_velocity1 <- rma.mv(yi = yi, V = VCV,
+             random = list(~1|Study_ID,
+                          ~1|Effectsize_ID,
+                          ~1|Species,
+                         ~1|Phylogeny),
+             R=list(Phylogeny = VCV_species),
+             test = "t",
+             data = dat_class_velocity)
+
+round(i2_ml(m_fish_velocity1), 2)
 
 #including fert mode as a moderator
 m_fish_velocity <- rma.mv(yi = yi, V = VCV, mod = ~Fertilisation_mode-1,  
