@@ -436,7 +436,7 @@ m4 <- rma.mv(yi = yi, V = VCV3,
 
 round(i2_ml(m4), 2)
 
-i2_ml(m4, data =  dat3, boot = 100)
+i2_ml(m4, data =  dat3)
 ```
 
 #### Fertilisation mode meta-regression
@@ -507,7 +507,7 @@ m5 <- rma.mv(yi = yi, V = VCV4,
 
 round(i2_ml(m5), 2) 
 
-i2_ml(m5, data =  dat4, boot = 100)
+i2_ml(m5, data =  dat4)
 ```
 
 #### Fertilisation mode meta-regression
@@ -580,7 +580,7 @@ m6 <- rma.mv(yi = yi, V = VCV5,
 # summary(m6, transfm = "tanh")
 
 round(i2_ml(m6), 2)
-i2_ml(m6, data =  dat5, boot = 100)
+i2_ml(m6, data =  dat5)
 ```
 
 #### Fertilisation mode meta-regression
