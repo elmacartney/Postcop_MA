@@ -1337,20 +1337,49 @@ mytree_spermlength <- read.tree(here("R", "mytree_spermlength.tre"))
 plottree <- ggtree(mytree_spermlength) + 
   geom_tiplab(size = 3, hjust = -0.1, align = TRUE)
 
-# plot(plottree)
+plot(plottree)
 dat4$Species <- as.factor(dat4$Species)
 
 #Taking the average effect size per species
-dat4_averageeffect <- dat4 %>%
+# dat4_averageeffect <- dat4 %>%
+#   group_by(Species) %>%
+#   summarize(mean_zr = mean(yi))
+
+calculate_ci_for_multiple_observations <- function(group_data) {
+  if (nrow(group_data) > 1) {
+    ci <- t.test(group_data$yi)$conf.int
+    return(c(lower = ci[1], upper = ci[2]))
+  } else {
+    return(NA)  # Return NA for groups with only one observation
+  }
+}
+
+dat4_ci_multiple_observations <- dat4 %>%
   group_by(Species) %>%
-  summarize(mean_zr = mean(yi))
+  summarize(
+    mean_zr = mean(yi),
+    ci_lower = ifelse(n() > 1, calculate_ci_for_multiple_observations(.)['lower'], NA),
+    ci_upper = ifelse(n() > 1, calculate_ci_for_multiple_observations(.)['upper'], NA)
+  ) %>%
+  ungroup()
 
 Figs7 <- facet_plot(plottree, panel="dot", data=dat4_averageeffect, geom=geom_point, aes(x=mean_zr), size=2.5) +
   theme(axis.title.x=element_text(size=10),
         axis.text.x=element_text(size=10)) +
-  geom_vline(xintercept=0) 
+  geom_vline(xintercept=0)
 
 Figs7
+
+
+# Figs7 <- facet_plot(plottree, panel="dot", data=dat4_ci_multiple_observations, geom=geom_point, aes(x=mean_zr), size=2.5) +
+#   theme(axis.title.x=element_text(size=10),
+#         axis.text.x=element_text(size=10)) +
+#   geom_vline(xintercept=0) +
+#   geom_errorbar(aes(x=mean_zr, ymin=ci_lower, ymax=ci_upper), width=0.2, position=position_dodge(width=0.25))
+
+
+# Print the result
+print(Figs7)
 
 ```
 
